@@ -1,0 +1,20 @@
+{
+  "name": "UxmalStream",
+  "version": "1.5.2",
+  "description": "UxmalStream Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Karol Arakelian / emps",
+  "license": "UXMAL",
+  "dependencies": {
+    "colors": "1.1.2",
+    "ip": "0.3.3",
+    "lodash": "3.10.1",
+    "node-schedule": "0.6.0",
+    "nodemailer": "1.9.0",
+    "omx-manager": "git+https://github.com/emps/omx-manager.git",
+    "q": "^1.4.1"
+  }
+}
