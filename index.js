@@ -656,11 +656,12 @@ function setEmail(e, p) {
 }
 
 function sendMail() {
-    mailOptions.subject = 'uxmalstream ' + passport.name + ' turned on';
-    mailOptions.text = passport.place + ' at ' + passport.address + ' ';
-    networkInfo.localIp = ip.address();
-    mailOptions.text += 'streamer local ip: ' + networkInfo.localIp + ' ';
-    exec('curl icanhazip.com', function(error, stdout, stderr) {
+    logAndPrint('Info', 'mail aborted ');
+    //mailOptions.subject = 'uxmalstream ' + passport.name + ' turned on';
+    //mailOptions.text = passport.place + ' at ' + passport.address + ' ';
+    //networkInfo.localIp = ip.address();
+    //mailOptions.text += 'streamer local ip: ' + networkInfo.localIp + ' ';
+    //exec('curl icanhazip.com', function(error, stdout, stderr) {
         if (stdout) {
             networkInfo.networkIp = stdout.toString().replace(/\s+/g, " ").trim();
             mailOptions.text += 'streamer ip: ' + networkInfo.networkIp;
@@ -676,16 +677,17 @@ function sendMail() {
 }
 
 function sendMailIfIpChange() {
-    exec('curl icanhazip.com', function(error, stdout, stderr) {
-        if (stdout) {
-            if (networkInfo.networkIp === stdout.toString().replace(/\s+/g, " ").trim() && networkInfo.localIp === ip.address()) return;
-            mailOptions.subject = 'uxmalstream ' + passport.name + ' ip change';
-            mailOptions.text = passport.place + ' at ' + passport.address + ' ';
-            networkInfo.localIp = ip.address();
-            networkInfo.networkIp = stdout.toString().replace(/\s+/g, " ").trim();
-            mailOptions.text += 'streamer local ip: ' + networkInfo.localIp + ' ';
-            mailOptions.text += 'streamer ip: ' + networkInfo.networkIp;
-            transporter.sendMail(mailOptions, function(error, info) {
+    logAndPrint('info', 'mail abortado');
+    //exec('curl icanhazip.com', function(error, stdout, stderr) {
+    //    if (stdout) {
+    //        if (networkInfo.networkIp === stdout.toString().replace(/\s+/g, " ").trim() && networkInfo.localIp === ip.address()) return;
+    //        mailOptions.subject = 'uxmalstream ' + passport.name + ' ip change';
+    //        mailOptions.text = passport.place + ' at ' + passport.address + ' ';
+    //        networkInfo.localIp = ip.address();
+    //        networkInfo.networkIp = stdout.toString().replace(/\s+/g, " ").trim();
+    //        mailOptions.text += 'streamer local ip: ' + networkInfo.localIp + ' ';
+    //        mailOptions.text += 'streamer ip: ' + networkInfo.networkIp;
+    //        transporter.sendMail(mailOptions, function(error, info) {
                 if (error) {
                     logAndPrint('warningInfo', 'mail not sent: ' + error);
                 } else {
@@ -1141,7 +1143,7 @@ function getDate() {
 }
 
 function playPlayList() {
-    sendMailIfIpChange();
+    //sendMailIfIpChange();
     var forceStop = false,
         streamedOnesAtLeast = playlist.currentIndex === 0 ? false : true;
     if (omx.isPlaying() || playlist.files.length === 0) return false;
