@@ -39,7 +39,7 @@ var fs = new require('fs'),
     milisLinks = {
         index: 0,
         fullCircle: false,
-        links: ['https://currentmillis.com/time/minutes-since-unix-epoch.php', 'http://worldclockapi.com/api/json/est/now']
+        links: ['http://currentmillis.com/time/minutes-since-unix-epoch.php', 'http://worldclockapi.com/api/json/est/now']
     },
     version = '0.7.1',
     filetypes = ['mkv', 'mp4', 'mp3', 'avi', 'mpeg'],
