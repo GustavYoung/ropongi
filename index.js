@@ -285,9 +285,9 @@ function setTimeProxy() {
 function setTime() {
     logAndPrint('info', 'attempt to load time from: ' + milisLinks.links[milisLinks.index].split('/')[2]);
     http.get(milisLinks.links[milisLinks.index], function(res) {
-        var stringData = '';
-        res.on("data", function(rdata) {
-            stringData += rdata;
+        var stringData = "" ;
+        res.on("data", function(data) {
+            stringData += data;
             logAndPrint('info', 'que mamada' + stringData);
         });
         res.on('end', function() {
@@ -1980,15 +1980,15 @@ function setAutoShutdown(status) {
 }
 
 function getMillis(stringData) {
-    var ms = "",
+    var ms = 0,
         temp;
     if (isJsonObject(stringData)) {
         temp = JSON.parse(stringData);
-        if (temp.hasOwnProperty('currentDateTime') && temp.ms.toString().length === 22) {
-            ms = parse(temp.ms);
+        if (temp.hasOwnProperty('ms') && temp.ms.toString().length === 13) {
+            ms = parseInt(temp.ms);
         }
-    } else if (stringData.toString().length === 22) {
-        ms = parse(stringData);
+    } else if (stringData.toString().length === 13) {
+        ms = parseInt(stringData);
     }
     return ms;
 }
