@@ -1984,10 +1984,10 @@ function getMillis(stringData) {
         temp;
     if (isJsonObject(stringData)) {
         temp = JSON.parse(stringData);
-        if (temp.hasOwnProperty('currentFileTime') && temp.ms.toString().length === 13) {
+        if (temp.hasOwnProperty('currentDateTime') && temp.ms.toString().length === 22) {
             ms = parseInt(temp.ms);
         }
-    } else if (stringData.toString().length === 13) {
+    } else if (stringData.toString().length === 22) {
         ms = parseInt(stringData);
     }
     return ms;
