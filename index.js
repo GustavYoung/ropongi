@@ -288,7 +288,7 @@ function setTime() {
         let stringData = "";
         res.on("data", function(data) {
             stringData += data;
-            var stringData = _.pluck('currentDateTime');
+            var stringData = pluck('currentDateTime');
             logAndPrint('info', 'que mamada' + stringData);
         });
         res.on('close', function() {
