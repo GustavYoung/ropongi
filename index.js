@@ -41,7 +41,7 @@ var fs = new require('fs'),
         fullCircle: false,
         links: ['https://currentmillis.com/time/minutes-since-unix-epoch.php']
     },
-    version = '1.6.2',
+    version = '0.7.1',
     filetypes = ['mkv', 'mp4', 'mp3', 'avi', 'mpeg'],
     outputTypes = ['both', 'hdmi', 'local'],
     schedulesType = ['days', 'genres'],
@@ -1589,7 +1589,7 @@ function getUptime() {
 
 function currentStatus() {
     updateDay();
-    logAndPrint('pass', 'UxmalStream v' + version + ' ' + passport.name + ' current status:');
+    logAndPrint('pass', 'Ropongi_Stream v' + version + ' ' + passport.name + ' current status:');
     logAndPrint('pass', 'email ' + email.auth.user);
     logAndPrint('pass', 'output ' + configs.output);
     logAndPrint('pass', 'location ' + passport.place + ' at ' + passport.address);
