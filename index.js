@@ -1980,7 +1980,7 @@ function setAutoShutdown(status) {
 }
 
 function getMillis(stringData) {
-    var ms,
+    var ms = "",
         temp;
     if (isJsonObject(stringData)) {
         temp = JSON.parse(stringData);
