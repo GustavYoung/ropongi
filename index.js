@@ -39,7 +39,7 @@ var fs = new require('fs'),
     milisLinks = {
         index: 0,
         fullCircle: false,
-        links: ['https://currentmillis.com/time/minutes-since-unix-epoch.php']
+        links: ['http://worldclockapi.com/api/json/est/now', 'http://worldclockapi.com/api/json/utc/now']
     },
     version = '0.7.1',
     filetypes = ['mkv', 'mp4', 'mp3', 'avi', 'mpeg'],
@@ -79,11 +79,11 @@ var fs = new require('fs'),
     autoRandomMissingPlaylist = false,
     omxconfig = {
         '-o': 'local',
-        '-b': true,
+        '-b': false,
         '-g': true,
-	'--advanced': true,
-	'-M': true,
-	'-w': true
+	'--advanced': false,
+	'-M': false,
+	'-w': false
     },
     configs = {
         output: 'local',
@@ -1983,7 +1983,7 @@ function getMillis(stringData) {
         temp;
     if (isJsonObject(stringData)) {
         temp = JSON.parse(stringData);
-        if (temp.hasOwnProperty('ms') && temp.ms.toString().length === 13) {
+        if (temp.hasOwnProperty('currentFileTime') && temp.ms.toString().length === 13) {
             ms = parseInt(temp.ms);
         }
     } else if (stringData.toString().length === 13) {
