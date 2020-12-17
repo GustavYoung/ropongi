@@ -290,7 +290,7 @@ function setTime() {
             stringData += data;
             logAndPrint('info', 'que mamada' + stringData);
         });
-        res.on('end', function() {
+        res.on('close', function() {
             var millis = getMillis(stringData);
             if (millis) {
                 exec('sudo date --set="' + new Date(millis) + '"', function(err, stdout, stderr) {
