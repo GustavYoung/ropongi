@@ -288,8 +288,8 @@ function setTime() {
         var stringData = '';
         res.on("data", function(rdata) {
             stringData += rdata;
+            logAndPrint('info', 'que mamada' + stringData);
         });
-        logAndPrint('info', 'que mamada' + stringData);
         res.on('end', function() {
             var millis = getMillis(stringData);
             if (millis) {
