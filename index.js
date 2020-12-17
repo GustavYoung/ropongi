@@ -285,9 +285,9 @@ function setTimeProxy() {
 function setTime() {
     logAndPrint('info', 'attempt to load time from: ' + milisLinks.links[milisLinks.index].split('/')[2]);
     http.get(milisLinks.links[milisLinks.index], function(res) {
-        var stringData = "" ;
-        res.on("data", function(data) {
-            stringData += data;
+        let stringData = "";
+        res.on("data", function(chunk) {
+            stringData += chunk;
             logAndPrint('info', 'que mamada' + stringData);
         });
         res.on('close', function() {
