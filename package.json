@@ -1,6 +1,6 @@
 {
   "name": "ropongi_stream",
-  "version": "0.7",
+  "version": "1.7",
   "description": "UXM emergency",
   "main": "index.js",
   "scripts": {
