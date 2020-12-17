@@ -662,22 +662,22 @@ function sendMail() {
     //networkInfo.localIp = ip.address();
     //mailOptions.text += 'streamer local ip: ' + networkInfo.localIp + ' ';
     //exec('curl icanhazip.com', function(error, stdout, stderr) {
-        if (stdout) {
-            networkInfo.networkIp = stdout.toString().replace(/\s+/g, " ").trim();
-            mailOptions.text += 'streamer ip: ' + networkInfo.networkIp;
-            transporter.sendMail(mailOptions, function(error, info) {
-                if (error) {
-                    logAndPrint('warningInfo', 'mail not sent: ' + error);
-                } else {
-                    logAndPrint('info', 'mail sent to: ' + mailOptions.to);
-                }
-            })
-        }
-    });
+    //    if (stdout) {
+    //        networkInfo.networkIp = stdout.toString().replace(/\s+/g, " ").trim();
+    //        mailOptions.text += 'streamer ip: ' + networkInfo.networkIp;
+    //        transporter.sendMail(mailOptions, function(error, info) {
+    //            if (error) {
+    //                logAndPrint('warningInfo', 'mail not sent: ' + error);
+    //            } else {
+    //                logAndPrint('info', 'mail sent to: ' + mailOptions.to);
+    //            }
+    //        })
+    //    }
+    //});
 }
 
 function sendMailIfIpChange() {
-    logAndPrint('info', 'mail abortado');
+    logAndPrint('info', 'mail abortado cambio de IP');
     //exec('curl icanhazip.com', function(error, stdout, stderr) {
     //    if (stdout) {
     //        if (networkInfo.networkIp === stdout.toString().replace(/\s+/g, " ").trim() && networkInfo.localIp === ip.address()) return;
@@ -688,14 +688,14 @@ function sendMailIfIpChange() {
     //        mailOptions.text += 'streamer local ip: ' + networkInfo.localIp + ' ';
     //        mailOptions.text += 'streamer ip: ' + networkInfo.networkIp;
     //        transporter.sendMail(mailOptions, function(error, info) {
-                if (error) {
-                    logAndPrint('warningInfo', 'mail not sent: ' + error);
-                } else {
-                    logAndPrint('info', 'mail sent to: ' + mailOptions.to);
-                }
-            })
-        }
-    });
+    //            if (error) {
+    //                logAndPrint('warningInfo', 'mail not sent: ' + error);
+    //            } else {
+    //                logAndPrint('info', 'mail sent to: ' + mailOptions.to);
+    //            }
+    //        })
+    //    }
+    //});
 }
 process.on('exit', function(code) {
     stopPlay().then(function() {
