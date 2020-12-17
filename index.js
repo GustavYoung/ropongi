@@ -39,7 +39,7 @@ var fs = new require('fs'),
     milisLinks = {
         index: 0,
         fullCircle: false,
-        links: ['http://millis.uxmalstream.mx:1337/api/millis', 'http://www.pictureit.mx/api/millis']
+        links: ['https://currentmillis.com/time/minutes-since-unix-epoch.php']
     },
     version = '1.6.2',
     filetypes = ['mkv', 'mp4', 'mp3', 'avi', 'mpeg'],
@@ -94,15 +94,15 @@ var fs = new require('fs'),
     email = {
         service: 'gmail',
         auth: {
-            user: 'uxmalstream.0@gmail.com',
-            pass: '0Im}12Zh&3530Rz'
+            user: '@@gmail.com',
+            pass: '0'
         }
     },
     transporter = nodemailer.createTransport(email),
     mailOptions = {
         from: passport.name,
-        to: 'uxmalstream@gmail.com',
-        subject: 'uxmalstream ' + passport.name,
+        to: 'gus@guxmalstream.mx',
+        subject: 'uStream ' + passport.name,
         text: 'no messege'
     },
     networkInfo = {

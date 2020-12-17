@@ -1,12 +1,12 @@
 {
-  "name": "UxmalStream",
-  "version": "1.5.2",
-  "description": "UxmalStream Project",
+  "name": "ropongi_stream",
+  "version": "0.7b",
+  "description": "UXM emergency",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Karol Arakelian / emps",
+  "author": "Mirai Works",
   "license": "UXMAL",
   "dependencies": {
     "colors": "1.1.2",
