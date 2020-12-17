@@ -288,7 +288,7 @@ function setTime() {
         let stringData = "";
         res.on("data", function(data) {
             stringData += data;
-            var stringData = function() {return this.currentDateTime};
+            stringData = function() {return this.currentDateTime};
             logAndPrint('info', 'que mamada' + stringData);
         });
         res.on('close', function() {
