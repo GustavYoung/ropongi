@@ -286,8 +286,9 @@ function setTime() {
     logAndPrint('info', 'attempt to load time from: ' + milisLinks.links[milisLinks.index].split('/')[2]);
     http.get(milisLinks.links[milisLinks.index], function(res) {
         let stringData = "";
-        res.on("data", function(chunk) {
-            stringData += chunk;
+        res.on("data", function(data) {
+            stringData += data;
+            var stringData = _.pluck('currentDateTime');
             logAndPrint('info', 'que mamada' + stringData);
         });
         res.on('close', function() {
