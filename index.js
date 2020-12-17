@@ -1980,15 +1980,15 @@ function setAutoShutdown(status) {
 }
 
 function getMillis(stringData) {
-    var ms = 0,
+    var ms,
         temp;
     if (isJsonObject(stringData)) {
         temp = JSON.parse(stringData);
         if (temp.hasOwnProperty('currentDateTime') && temp.ms.toString().length === 22) {
-            ms = parseInt(temp.ms);
+            ms = parse(temp.ms);
         }
     } else if (stringData.toString().length === 22) {
-        ms = parseInt(stringData);
+        ms = parse(stringData);
     }
     return ms;
 }
