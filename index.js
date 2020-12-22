@@ -1188,7 +1188,7 @@ function playPlayList() {
                 // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', sharedday + '/' + playlist.files[playlist.currentIndex]]);
             }
             omx.once('end', function() {
-                if (streaming && playlist.currentIndex - 1 === 0 ){
+                if (streaming && playlist.currentIndex === 0 ){
                     logAndPrint('info', 'recargando playlist ' + (playlist.currentIndex) + (playlist.files.length));
                     playNext();
                     stopPlay().then(function(data) {
