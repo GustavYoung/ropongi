@@ -127,6 +127,9 @@ omx.on('play', function(path) {
     if (!pathArray.length) return;
     var file = pathArray.pop();
     logAndPrint('info', 'playing index: ' + (playlist.files.indexOf(file) + 1) + '/' + playlist.files.length + ' : ' + file + ' in ' + playlist.directory + ' folder.');
+    if (playlist.currentIndex + 1 === playlist.files.length){
+        logAndPrint('info', 'se acabo la mierda ' )
+    };
 });
 omx.on('stderr', function(err) {
     logAndPrint('warningInfo', 'omxplayer error: ' + err);
