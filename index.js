@@ -101,7 +101,7 @@ var fs = new require('fs'),
     transporter = nodemailer.createTransport(email),
     mailOptions = {
         from: passport.name,
-        to: 'gus@guxmalstream.mx',
+        to: 'gus@uxmalstream.mx',
         subject: 'uStream ' + passport.name,
         text: 'no messege'
     },
@@ -658,7 +658,7 @@ function setEmail(e, p) {
 
 function sendMail() {
     logAndPrint('Info', 'mail aborted ');
-    //mailOptions.subject = 'uxmalstream ' + passport.name + ' turned on';
+    //mailOptions.subject = 'ropongistream ' + passport.name + ' turned on';
     //mailOptions.text = passport.place + ' at ' + passport.address + ' ';
     //networkInfo.localIp = ip.address();
     //mailOptions.text += 'streamer local ip: ' + networkInfo.localIp + ' ';
@@ -682,7 +682,7 @@ function sendMailIfIpChange() {
     //exec('curl icanhazip.com', function(error, stdout, stderr) {
     //    if (stdout) {
     //        if (networkInfo.networkIp === stdout.toString().replace(/\s+/g, " ").trim() && networkInfo.localIp === ip.address()) return;
-    //        mailOptions.subject = 'uxmalstream ' + passport.name + ' ip change';
+    //        mailOptions.subject = 'ropongistream ' + passport.name + ' ip change';
     //        mailOptions.text = passport.place + ' at ' + passport.address + ' ';
     //        networkInfo.localIp = ip.address();
     //        networkInfo.networkIp = stdout.toString().replace(/\s+/g, " ").trim();
@@ -700,7 +700,7 @@ function sendMailIfIpChange() {
 }
 process.on('exit', function(code) {
     stopPlay().then(function() {
-        logAndPrint('info', 'UxmalStream exited: ' + code);
+        logAndPrint('info', 'ropongiStream exited: ' + code);
     });
 });
 process.on('uncaughtException', function(err) {
@@ -935,7 +935,7 @@ function setLogs(bool) {
 }
 
 function printHelp() {
-    logAndPrint('pass', 'UxmalStream commands list:')
+    logAndPrint('pass', 'ropongiStream commands list:')
     logAndPrint('pass', '| * DAY = { all days,' + weekday + ' }');
     logAndPrint('pass', '| * GENRE = { all genres,' + genres.toString() + ' }');
     logAndPrint('pass', '| * STATUS == on,off');
@@ -954,7 +954,7 @@ function printHelp() {
     logAndPrint('pass', '| set email EMAIL PASS');
     logAndPrint('pass', '| set logs STATUS');
     logAndPrint('pass', '| set autoshutdown STATUS');
-    logAndPrint('pass', '| set time MILLIS | get from http://currentmillis.com/ OR http://millis.uxmalstream.mx:1337/api/millis OR js: new Date().valueOf()');
+    logAndPrint('pass', '| set time MILLIS | get from http://currentmillis.com/ OR js: new Date().valueOf()');
     logAndPrint('pass', '| add genres GENRES');
     logAndPrint('pass', '| del task DAY');
     logAndPrint('pass', '| del playlist DAY or GENRE');
@@ -1188,8 +1188,8 @@ function playPlayList() {
                 // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', sharedday + '/' + playlist.files[playlist.currentIndex]]);
             }
             omx.once('end', function() {
-                if (playlist.currentIndex === playlist.files.length - 1){
-                    logAndPrint('info', 'recargando playlist ');
+                if (playlist.currentIndex + 1 === playlist.files.length){
+                    logAndPrint('info', 'recargando playlist ' + (playlist.currentIndex) + (playlist.files.length));
                     stopPlay().then(function(data) {
                         logAndPrint('pass', data.message);
                     });
