@@ -1191,7 +1191,7 @@ function playPlayList() {
                 if (playlist.currentIndex + 1 === playlist.files.length){
                     logAndPrint('info', 'recargando playlist ' );
                     stopPlay();
-                    startPlay();        
+                    startPlay();      
                 }
                 else if (streaming) {
                     playNext();
