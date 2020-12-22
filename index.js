@@ -1984,11 +1984,12 @@ function getMillis(stringData) {
     if (isJsonObject(stringData)) {
         temp = JSON.parse(stringData);
         if (temp.hasOwnProperty('currentDateTime') && temp.currentDateTime.toString().length === 22) {
-            logAndPrint('pass', 'chinga1 ');
+            logAndPrint('info', 'chinga 1' + temp);
+            temp = parse(temp.currentDateTime);
         }
     } else if (stringData.toString().length === 22) {
-        logAndPrint('pass', 'chinga2 ');
-        //ms = parseInt(stringData);
+        logAndPrint('info', 'chinga 2' + temp);
+        temp = parseInt(stringData);
     }
     return temp;
 }
