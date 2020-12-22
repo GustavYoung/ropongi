@@ -1194,7 +1194,7 @@ function playPlayList() {
                     stopPlay().then(function(data) {
                         logAndPrint('pass', data.message);
                     });
-                    playlist.currentIndex = (playlist.currentIndex) - 1;
+                    playlist.currentIndex = playlist.currentIndex - 1;
                     playIfPlayTime().then(function() {
                         logAndPrint('pass', 'starting stream.');
                     }, function(err) {
