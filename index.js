@@ -1190,7 +1190,7 @@ function playPlayList() {
             omx.once('end', function() {
                 if (streaming && playlist.currentIndex === 0 ){
                     logAndPrint('info', 'recargando playlist ' + (playlist.currentIndex) + (playlist.files.length));
-                    playNext();
+                    //playNext();
                     stopPlay().then(function(data) {
                         logAndPrint('pass', data.message);
                     });
