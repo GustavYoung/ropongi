@@ -1980,15 +1980,17 @@ function setAutoShutdown(status) {
 }
 
 function getMillis(stringData) {
-    var ms = 0,
+    var ms = "",
         temp;
     if (isJsonObject(stringData)) {
-        temp = JSON.parse(stringData.currentDateTime);
-        if (temp.hasOwnProperty('ms') && temp.ms.toString().length === 22) {
-            ms = parseInt(temp.ms);
+        temp = JSON.parse(stringData);
+        if (temp.hasOwnProperty('currentDateTime') && temp.ms.toString().length === 22) {
+            logAndPrint('pass', 'chinga1 ');
+            //ms = parseInt(temp.ms);
         }
-    } else if (stringData.toString().length === 13) {
-        ms = parseInt(stringData);
+    } else if (stringData.toString().length === 22) {
+        logAndPrint('pass', 'chinga2 ');
+        //ms = parseInt(stringData);
     }
     return temp;
 }
