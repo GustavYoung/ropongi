@@ -118,7 +118,7 @@ var fs = new require('fs'),
         minutes: 30
     },
     wifiCheckIntervalObject = null,
-    rtc = false,
+    rtc = true,
     setTimeTimeout;
 omx.setOmxCommand('/usr/bin/omxplayer');
 omx.enableHangingHandler();
@@ -288,7 +288,6 @@ function setTime() {
         let stringData = "";
         res.on("data", function(data) {
             stringData += data;
-            stringData = function() {return this.currentDateTime};
             logAndPrint('info', 'que mamada' + stringData);
         });
         res.on('close', function() {
@@ -1984,14 +1983,14 @@ function getMillis(stringData) {
     var ms = 0,
         temp;
     if (isJsonObject(stringData)) {
-        temp = JSON.parse(stringData);
-        if (temp.hasOwnProperty('ms') && temp.ms.toString().length === 13) {
+        temp = JSON.parse(stringData.currentDateTime);
+        if (temp.hasOwnProperty('ms') && temp.ms.toString().length === 22) {
             ms = parseInt(temp.ms);
         }
     } else if (stringData.toString().length === 13) {
         ms = parseInt(stringData);
     }
-    return ms;
+    return temp;
 }
 
 function skipToNextMillisLink() {
