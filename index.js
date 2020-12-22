@@ -39,7 +39,7 @@ var fs = new require('fs'),
     milisLinks = {
         index: 0,
         fullCircle: false,
-        links: ['http://currentmillis.com/time/minutes-since-unix-epoch.php', 'http://worldclockapi.com/api/json/est/now']
+        links: ['http://worldclockapi.com/api/json/est/now', 'http://currentmillis.com/time/minutes-since-unix-epoch.php']
     },
     version = '0.7.1',
     filetypes = ['mkv', 'mp4', 'mp3', 'avi', 'mpeg'],
@@ -1985,11 +1985,11 @@ function getMillis(stringData) {
         temp = JSON.parse(stringData);
         if (temp.hasOwnProperty('currentDateTime') && temp.currentDateTime.toString().length === 22) {
             logAndPrint('info', 'chinga 1' + temp);
-            temp = parse(temp.currentDateTime);
+            temp = (temp.currentDateTime);
         }
     } else if (stringData.toString().length === 22) {
         logAndPrint('info', 'chinga 2' + temp);
-        temp = parseInt(stringData);
+        temp = (stringData);
     }
     return temp;
 }
