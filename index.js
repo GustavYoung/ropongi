@@ -129,7 +129,7 @@ omx.on('play', function(path) {
     logAndPrint('info', 'playing index: ' + (playlist.files.indexOf(file) + 1) + '/' + playlist.files.length + ' : ' + file + ' in ' + playlist.directory + ' folder.');
     if (playlist.currentIndex + 1 === playlist.files.length){
         logAndPrint('info', 'recargando playlist ' );
-        loadPlayList(day);        
+        loadPlayList();        
     };
 });
 omx.on('stderr', function(err) {
