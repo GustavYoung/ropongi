@@ -288,7 +288,7 @@ function setTime() {
         let stringData = "";
         res.on("data", function(data) {
             stringData += data;
-            logAndPrint('info', 'que mamada' + stringData);
+            //logAndPrint('info', 'fecha raw' + stringData);
         });
         res.on('close', function() {
             var millis = getMillis(stringData);
@@ -1984,7 +1984,7 @@ function getMillis(stringData) {
     if (isJsonObject(stringData)) {
         temp = JSON.parse(stringData);
         if (temp.hasOwnProperty('currentDateTime') && temp.currentDateTime.toString().length === 22) {
-            logAndPrint('info', 'chinga 1' + temp);
+            //logAndPrint('info', 'diag 1' + temp);
             temp = (temp.currentDateTime);
         }
     } else if (stringData.toString().length === 22) {
