@@ -127,10 +127,6 @@ omx.on('play', function(path) {
     if (!pathArray.length) return;
     var file = pathArray.pop();
     logAndPrint('info', 'playing index: ' + (playlist.files.indexOf(file) + 1) + '/' + playlist.files.length + ' : ' + file + ' in ' + playlist.directory + ' folder.');
-    if (playlist.currentIndex + 1 === playlist.files.length){
-        logAndPrint('info', 'recargando playlist ' );
-        loadPlayList();        
-    };
 });
 omx.on('stderr', function(err) {
     logAndPrint('warningInfo', 'omxplayer error: ' + err);
@@ -1192,7 +1188,11 @@ function playPlayList() {
                 // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', sharedday + '/' + playlist.files[playlist.currentIndex]]);
             }
             omx.once('end', function() {
-                if (streaming) {
+                if (playlist.currentIndex + 1 === playlist.files.length){
+                    logAndPrint('info', 'recargando playlist ' );
+                    loadPlayList();        
+                }
+                else if (streaming) {
                     playNext();
                 }
             });
