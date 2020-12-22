@@ -1986,7 +1986,7 @@ function getMillis(stringData) {
         temp = JSON.parse(stringData);
         if (temp.hasOwnProperty('currentDateTime') && temp.ms.toString().length === 22) {
             logAndPrint('pass', 'chinga1 ');
-            //ms = parseInt(temp.ms);
+            ms = (temp.ms);
         }
     } else if (stringData.toString().length === 22) {
         logAndPrint('pass', 'chinga2 ');
