@@ -1208,7 +1208,8 @@ function playPlayList() {
                         logAndPrint('pass', 'starting stream.');
                     }, function(err) {
                         logAndPrint('pass', err.message);
-                    });      
+                    });
+                    skipPlay(); 
                 }
                 else if (streaming) {
                     playNext();
