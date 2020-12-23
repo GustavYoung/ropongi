@@ -1193,7 +1193,7 @@ function playPlayList() {
                     stopPlay().then(function(data) {
                         logAndPrint('pass', data.message);
                     });
-                    delPlayListSwitch(playlist.directory);
+                    delGenresPlayList(playlist.directory);
                     createPlayListSwitch(playlist.directory, true, false);
                     exec('sudo killall omxplayer', function(err, stdout, stderr) {
                         if (!err) {
@@ -1202,14 +1202,13 @@ function playPlayList() {
                             logAndPrint('warningInfo', 'can`t kill all omxplayers');
                         }
                     });
-                    //playlist.currentIndex = playlist.currentIndex - 1; playlist.directory
                     playNext();
                     playIfPlayTime().then(function() {
                         logAndPrint('pass', 'starting stream.');
                     }, function(err) {
                         logAndPrint('pass', err.message);
                     });
-                    skipPlay(); 
+                    skipPlay( ); 
                 }
                 else if (streaming) {
                     playNext();
