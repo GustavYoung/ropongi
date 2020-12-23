@@ -1194,7 +1194,8 @@ function playPlayList() {
                     stopPlay().then(function(data) {
                         logAndPrint('pass', data.message);
                     });
-                    playlist.currentIndex = playlist.currentIndex - 1;
+                    createPlayListSwitch(playlist.directory, true, false);
+                    //playlist.currentIndex = playlist.currentIndex - 1; playlist.directory
                     playIfPlayTime().then(function() {
                         logAndPrint('pass', 'starting stream.');
                     }, function(err) {
