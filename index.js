@@ -101,8 +101,8 @@ var fs = new require('fs'),
     transporter = nodemailer.createTransport(email),
     mailOptions = {
         from: passport.name,
-        to: 'gus@uxmalstream.mx',
-        subject: 'uStream ' + passport.name,
+        to: 'ropongi@ideasign.mx',
+        subject: 'ropongiStream ' + passport.name,
         text: 'no messege'
     },
     networkInfo = {
@@ -1193,9 +1193,18 @@ function playPlayList() {
                     stopPlay().then(function(data) {
                         logAndPrint('pass', data.message);
                     });
+                    delPlayListSwitch(playlist.directory);
                     createPlayListSwitch(playlist.directory, true, false);
+                    exec('sudo killall omxplayer', function(err, stdout, stderr) {
+                        if (!err) {
+                            logAndPrint('info', 'all omx players killed ' + new Date());
+                        } else if (err) {
+                            logAndPrint('warningInfo', 'can`t kill all omxplayers');
+                        }
+                        if (cb) cb(err);
+                    });
                     //playlist.currentIndex = playlist.currentIndex - 1; playlist.directory
-                    //playNext();
+                    playNext();
                     playIfPlayTime().then(function() {
                         logAndPrint('pass', 'starting stream.');
                     }, function(err) {
