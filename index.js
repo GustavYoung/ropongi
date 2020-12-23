@@ -1194,7 +1194,7 @@ function playPlayList() {
                         logAndPrint('pass', data.message);
                     });
                     delGenresPlayList(playlist.directory);
-                    createPlayListSwitch(playlist.directory, true, false);
+                    createGenresPlayList(playlist.directory, true);
                     exec('sudo killall omxplayer', function(err, stdout, stderr) {
                         if (!err) {
                             logAndPrint('info', 'all omx players killed ' + new Date());
