@@ -1190,12 +1190,12 @@ function playPlayList() {
             omx.once('end', function() {
                 if (streaming && playlist.currentIndex === 0 ){
                     logAndPrint('info', 'recargando playlist ' + (playlist.currentIndex) + (playlist.files.length));
-                    playNext();
                     stopPlay().then(function(data) {
                         logAndPrint('pass', data.message);
                     });
                     createPlayListSwitch(playlist.directory, true, false);
                     //playlist.currentIndex = playlist.currentIndex - 1; playlist.directory
+                    //playNext();
                     playIfPlayTime().then(function() {
                         logAndPrint('pass', 'starting stream.');
                     }, function(err) {
