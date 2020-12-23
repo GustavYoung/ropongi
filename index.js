@@ -1198,13 +1198,12 @@ function playPlayList() {
                     exec('sudo killall omxplayer', function(err, stdout, stderr) {
                         if (!err) {
                             logAndPrint('info', 'all omx players killed ' + new Date());
+                            skipPlay([1]); 
                         } else if (err) {
                             logAndPrint('warningInfo', 'can`t kill all omxplayers');
                         }
                     });
                     playNext();
-                    line="";
-                    skipPlay(line.trim().split(' ')[1]); 
                 }
                 else if (streaming) {
                     playNext();
