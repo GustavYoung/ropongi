@@ -1203,12 +1203,7 @@ function playPlayList() {
                         }
                     });
                     playNext();
-                    playIfPlayTime().then(function() {
-                        logAndPrint('pass', 'starting stream.');
-                    }, function(err) {
-                        logAndPrint('pass', err.message);
-                    });
-                    skipPlay( ); 
+                    skipPlay(line.trim().split(' ')[1]); 
                 }
                 else if (streaming) {
                     playNext();
