@@ -1201,7 +1201,6 @@ function playPlayList() {
                         } else if (err) {
                             logAndPrint('warningInfo', 'can`t kill all omxplayers');
                         }
-                        if (cb) cb(err);
                     });
                     //playlist.currentIndex = playlist.currentIndex - 1; playlist.directory
                     playNext();
