@@ -42,6 +42,7 @@ var fs = new require('fs'),
         links: ['http://worldclockapi.com/api/json/est/now', 'http://currentmillis.com/time/minutes-since-unix-epoch.php']
     },
     version = '0.7.1',
+    new_rdm_at_end = 1,
     filetypes = ['mkv', 'mp4', 'mp3', 'avi', 'mpeg'],
     outputTypes = ['both', 'hdmi', 'local'],
     schedulesType = ['days', 'genres'],
@@ -1188,7 +1189,7 @@ function playPlayList() {
                 // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', sharedday + '/' + playlist.files[playlist.currentIndex]]);
             }
             omx.once('end', function() {
-                if (streaming && playlist.currentIndex === 0 ){
+                if (new_rdm_at_end === 1 && streaming && playlist.currentIndex === 0 ){
                     logAndPrint('info', 'recargando playlist ' + (playlist.currentIndex) + (playlist.files.length));
                     stopPlay().then(function(data) {
                         logAndPrint('pass', data.message);
