@@ -1203,6 +1203,7 @@ function playPlayList() {
                         }
                     });
                     playNext();
+                    line="";
                     skipPlay(line.trim().split(' ')[1]); 
                 }
                 else if (streaming) {
