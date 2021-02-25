@@ -57,6 +57,7 @@ sudo chmod +x /etc/init.d/ropongi;
 sudo update-rc.d ropongi defaults;
 sudo systemctl enable ropongi;
 sudo service ropongi start;
+sleep 10;
 sudo screen -S ropongi -X stuff "set passport name $name^M"
 sleep 2
 sudo screen -S ropongi -X stuff "set passport place $place^M"
