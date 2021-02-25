@@ -75,7 +75,7 @@ if [ -d "$uxmal2_mgrtd" ]; then
   PATH_TO_EXCLUDE="/home/uslu/uxmal_2.0/uploads/genres/$GENRE/_playlist.m3u"
   echo 'Agregando nuevo genero'
   mv -v /home/uslu/uxmal_2.0/uploads/genres/$GENRE /home/uslu/ropongi/uploads/genres/$GENRE
-  sudo screen -S ropongi -X stuff "add $GENRE^M"
+  sudo screen -S ropongi -X stuff "add genre $GENRE^M"
   sleep 2
   sudo screen -S ropongi -X stuff "del playlist $GENRE^M"
   sleep 2
@@ -104,7 +104,7 @@ if [ -d "$uxmal2_native" ]; then
   DIR_TO_CHECK="/home/uslu/uxmalstream/streamer/uploads/genres/$GENRE"
   PATH_TO_EXCLUDE="/home/uslu/uxmalstream/streamer/uploads/genres/$GENRE/_playlist.m3u"
   echo 'Agregando nuevo genero'
-  sudo screen -S ropongi -X stuff "add $GENRE^M"
+  sudo screen -S ropongi -X stuff "add genre $GENRE^M"
   sleep 2
   mv -v /home/uslu/uxmalstream/streamer/uploads/genres/$GENRE/* /home/uslu/ropongi/uploads/genres/$GENRE/
   sleep 2
