@@ -50,6 +50,7 @@ sudo rm -rf adsplayer
 sudo rm -rf sponsors
 echo "Version ${red}0.7.1 24/02/2021${reset}" >&2
 echo "instalando nuevo reproductor."
+sudo service ropongi stop;
 cd /home/uslu/ropongi/
 npm install
 sudo cp /home/uslu/ropongi/ropongi /etc/init.d/ropongi;
