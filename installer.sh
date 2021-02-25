@@ -20,6 +20,9 @@ reset=`tput sgr0`
 uxmal2_native='/home/uslu/uxmalstream/streamer/'
 uxmal2_mgrtd='/home/uslu/uxmal_2.0/'
 target_fix='/home/uslu/uxmalstream/streamer/'
+name=$HOSTNAME
+place='Homeless'
+address='streets'
 i_native=0
 i_native_ok=0
 i_mgrtd=0
@@ -35,16 +38,36 @@ sudo chmod +x /etc/init.d/ropongi;
 sudo update-rc.d ropongi defaults;
 sudo systemctl enable ropongi;
 sudo service ropongi start;
+sudo screen -S ropongi -X stuff "set passport name $name^M"
+sleep 2
+sudo screen -S ropongi -X stuff "set passport place $place^M"
+sleep 2
+sudo screen -S ropongi -X stuff "set passport address $address^M"
+sleep 2
 
 #Comprobacion de carpetas 10/09/2020
 if [ -d "$uxmal2_mgrtd" ]; then
   echo "App migrada :S"
+cd /home/uslu/uxmalstream/streamer/uploads/genres/
+for dir in */
+do
+GENRE=$(basename "$dir")
+DIR_TO_CHECK="/home/uslu/uxmalstream/streamer/uploads/genres/$GENRE"
+PATH_TO_EXCLUDE="/home/uslu/uxmalstream/streamer/uploads/genres/$GENRE/_playlist.m3u"
+    echo 'Agregando nuevo genero'
+    mv -v /home/uslu/uxmalstream/streamer/uploads/genres/$GENRE /home/uslu/ropongi/uploads/genres/$GENRE
+    sudo screen -S ropongi -X stuff "add $GENRE^M"
+    sleep 2
+    sudo screen -S ropongi -X stuff "del playlist $GENRE^M"
+    sleep 2
+    sudo screen -S ropongi -X stuff "make random playlist $GENRE^M"
+done
 #Comprobacion de Link virtual memorias migradas.
+#
+#
 while [ $i_mgrtd_ok -lt 5 ]
 do
   target_fix='/home/uslu/uxmal_2.0/'
-
-  
   if [[ "$i_mgrtd_ok" == '11' ]]; then
     break
   fi
@@ -54,41 +77,13 @@ fi
 if [ -d "$uxmal2_native" ]; then
   echo "App nativa :)";
   #Comprobacion de Link virtual memorias nativas.
+  #
 while [ $i_native_ok -lt 5 ]
 do
   target_fix='/home/uslu/uxmalstream/streamer/uploads'
   echo "Intentos: $i_native"
-  ((i_native++));
-  if [ ! -L "${virtual_native}" ]
-  then
-     echo "%ERROR: El link ${virtual_native} no es valido!" >&2
-     echo "Reparando link virtual"
-     sudo rm -rf /home/uslu/uxmalstream/streamer/uploads/ads/ad1;
-     sudo ln -s /home/uslu/elements/Spots_con_audio/ /home/uslu/uxmalstream/streamer/uploads/ads/ad1;
-     else
-     echo "Link ad1 Valido!!!";
-     i_native_ok=11;
-  fi
-  if [ ! -L "${lv_imgflot_nat}" ]
-  then
-     echo "%ERROR: El link ${lv_imgflot_nat} no es valido!" >&2
-     echo "Reparando link virtual"
-     sudo rm -rf /home/uslu/uxmalstream/streamer/uploads/pngads;
-     sudo ln -s /home/uslu/elements/imagenes-flotantes/ /home/uslu/uxmalstream/streamer/uploads/pngads;
-     else
-     echo "Link imagenes flotantes Valido!!!";
-     i_mgrtd_ok=11;
-  fi      
-  if [ ! -L "${lv_adsflot_nat}" ]
-  then
-     echo "%ERROR: El link ${lv_adsflot_nat} no es valido!" >&2
-     echo "Reparando link virtual"
-     sudo rm -rf /home/uslu/uxmalstream/streamer/uploads/floatingads;
-     sudo ln -s /home/uslu/elements/Spots_sin_audio/ /home/uslu/uxmalstream/streamer/uploads/floatingads;
-     else
-     echo "Link imagenes flotantes Valido!!!";
-     i_mgrtd_ok=11;
-  fi      
+  
+    
   if [[ "$i_native_ok" == '11' ]]; then
     break
   fi
