@@ -29,6 +29,25 @@ i_mgrtd=0
 i_mgrtd_ok=0
 
 echo "Leyendo configuración" >&2
+echo "Limpiando cosas anteriores, desactivando automaticos"
+echo "respaldando......"
+sudo killall rsync
+sudo killall rsync
+sudo killall rsync
+sudo killall rsync
+sudo killall rsync
+sudo killall rsync
+sudo mkdir /home/uslu/backup_down
+sudo cp /home/uslu/gstool/cliente.cfg /home/uslu/backup_down/cliente.cfg
+sudo cp /home/uslu/AdsSync/sync.cfg /home/uslu/backup_down/sync.cfg
+sudo rm full_reinstall.sh
+sudo rm Leinstall.sh
+sudo rm -rf AdsSync
+sudo rm -rf gstool
+sudo rm -rf Llayer_utils
+sudo rm -rf adplay-alone
+sudo rm -rf adsplayer
+sudo rm -rf sponsors
 echo "Version ${red}0.7.1 24/02/2021${reset}" >&2
 echo "instalando nuevo reproductor."
 cd /home/uslu/ropongi/
@@ -48,19 +67,19 @@ sleep 2
 #Comprobacion de carpetas 10/09/2020
 if [ -d "$uxmal2_mgrtd" ]; then
   echo "App migrada :S"
-cd /home/uslu/uxmalstream/streamer/uploads/genres/
-for dir in */
-do
-GENRE=$(basename "$dir")
-DIR_TO_CHECK="/home/uslu/uxmalstream/streamer/uploads/genres/$GENRE"
-PATH_TO_EXCLUDE="/home/uslu/uxmalstream/streamer/uploads/genres/$GENRE/_playlist.m3u"
-    echo 'Agregando nuevo genero'
-    mv -v /home/uslu/uxmalstream/streamer/uploads/genres/$GENRE /home/uslu/ropongi/uploads/genres/$GENRE
-    sudo screen -S ropongi -X stuff "add $GENRE^M"
-    sleep 2
-    sudo screen -S ropongi -X stuff "del playlist $GENRE^M"
-    sleep 2
-    sudo screen -S ropongi -X stuff "make random playlist $GENRE^M"
+  cd /home/uslu/uxmal_2.0/uploads/genres/
+  for dir in */
+  do
+  GENRE=$(basename "$dir")
+  DIR_TO_CHECK="/home/uslu/uxmal_2.0/uploads/genres/$GENRE"
+  PATH_TO_EXCLUDE="/home/uslu/uxmal_2.0/uploads/genres/$GENRE/_playlist.m3u"
+  echo 'Agregando nuevo genero'
+  mv -v /home/uslu/uxmal_2.0/uploads/genres/$GENRE /home/uslu/ropongi/uploads/genres/$GENRE
+  sudo screen -S ropongi -X stuff "add $GENRE^M"
+  sleep 2
+  sudo screen -S ropongi -X stuff "del playlist $GENRE^M"
+  sleep 2
+  sudo screen -S ropongi -X stuff "make random playlist $GENRE^M"
 done
 #Comprobacion de Link virtual memorias migradas.
 #
@@ -68,6 +87,8 @@ done
 while [ $i_mgrtd_ok -lt 5 ]
 do
   target_fix='/home/uslu/uxmal_2.0/'
+  mv /home/uslu/uxmal_2.0/uploads/genres/ads/ad1/* /home/uslu/ropongi/uploads/sharedday/
+  i_mgrtd_ok=11
   if [[ "$i_mgrtd_ok" == '11' ]]; then
     break
   fi
@@ -76,14 +97,29 @@ done
 fi
 if [ -d "$uxmal2_native" ]; then
   echo "App nativa :)";
-  #Comprobacion de Link virtual memorias nativas.
-  #
+  cd /home/uslu/uxmalstream/streamer/uploads/genres/
+  for dir in */
+  do
+  GENRE=$(basename "$dir")
+  DIR_TO_CHECK="/home/uslu/uxmalstream/streamer/uploads/genres/$GENRE"
+  PATH_TO_EXCLUDE="/home/uslu/uxmalstream/streamer/uploads/genres/$GENRE/_playlist.m3u"
+  echo 'Agregando nuevo genero'
+  sudo screen -S ropongi -X stuff "add $GENRE^M"
+  sleep 2
+  mv -v /home/uslu/uxmalstream/streamer/uploads/genres/$GENRE/* /home/uslu/ropongi/uploads/genres/$GENRE/
+  sleep 2
+  sudo screen -S ropongi -X stuff "del playlist $GENRE^M"
+  sleep 2
+  sudo screen -S ropongi -X stuff "make random playlist $GENRE^M"
+done
+#Comprobacion de Link virtual memorias migradas.
+#
+#
 while [ $i_native_ok -lt 5 ]
 do
   target_fix='/home/uslu/uxmalstream/streamer/uploads'
-  echo "Intentos: $i_native"
-  
-    
+  mv /home/uslu/uxmalstream/streamer/uploads/ads/ad1/* /home/uslu/ropongi/uploads/sharedday
+  i_native_ok=11
   if [[ "$i_native_ok" == '11' ]]; then
     break
   fi
