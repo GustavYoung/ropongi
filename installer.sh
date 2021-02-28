@@ -42,12 +42,12 @@ sudo cp /home/uslu/gstool/cliente.cfg /home/uslu/backup_down/cliente.cfg
 sudo cp /home/uslu/AdsSync/sync.cfg /home/uslu/backup_down/sync.cfg
 sudo rm full_reinstall.sh
 sudo rm Leinstall.sh
-sudo rm -rf AdsSync
-sudo rm -rf gstool
-sudo rm -rf Llayer_utils
-sudo rm -rf adplay-alone
-sudo rm -rf adsplayer
-sudo rm -rf sponsors
+sudo rm -rf /home/uslu/AdsSync
+sudo rm -rf /home/uslu/gstool
+sudo rm -rf /home/uslu/Llayer_utils
+sudo rm -rf /home/uslu/adplay-alone
+sudo rm -rf /home/uslu/adsplayer
+sudo rm -rf /home/uslu/sponsors
 echo "Version ${red}0.7.1 24/02/2021${reset}" >&2
 echo "instalando nuevo reproductor."
 sudo service ropongi stop;
