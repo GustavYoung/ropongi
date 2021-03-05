@@ -2032,6 +2032,7 @@ function mainStart() {
     loadEmail();
     loadWifiCheck();
     loadGenres();
+    initialize();
     if (wifiCheck.status) checkWifi();
     eventEmitter.on('timeSet', initialize);
     eventEmitter.on('timeNotSet', function(err) {
