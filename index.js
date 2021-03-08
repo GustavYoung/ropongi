@@ -2034,7 +2034,7 @@ function mainStart() {
     loadGenres();
     initialize();
     if (wifiCheck.status) checkWifi();
-    eventEmitter.on('timeSet', initialize);
+    eventEmitter.on('timeSet', chmodRAll);
     eventEmitter.on('timeNotSet', function(err) {
         var fullCircle = skipToNextMillisLink();
         if (err.code === 0 && !fullCircle) {
