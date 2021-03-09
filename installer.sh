@@ -92,6 +92,7 @@ do
   mv /home/uslu/uxmal_2.0/uploads/genres/ads/ad1/* /home/uslu/ropongi/uploads/sharedday/
   i_mgrtd_ok=11
   if [[ "$i_mgrtd_ok" == '11' ]]; then
+    sudo service backtunnel restart
     break
   fi
 done
@@ -123,6 +124,7 @@ do
   mv /home/uslu/uxmalstream/streamer/uploads/ads/ad1/* /home/uslu/ropongi/uploads/sharedday
   i_native_ok=11
   if [[ "$i_native_ok" == '11' ]]; then
+    sudo service backtunnel restart
     break
   fi
 done
