@@ -80,10 +80,12 @@ var fs = new require('fs'),
     autoRandomMissingPlaylist = false,
     omxconfig = {
         '-o': 'local',
-        '--vol': '-500',
+        '--vol': '0',
         '-b': false,
         '-g': true,
 	    '--advanced': false,
+        '--no-osd': true,
+        '--no-keys': false,
 	    '-M': false,
 	    '-w': false
     },
