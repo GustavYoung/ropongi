@@ -68,6 +68,7 @@ On your favorite ssh client:
 
 Server: 198.58.105.234\
 Port: 57771\
+user: yukiko\
 Password: ZXAcSAbr2gDf
 
 This gonna connect to a central server in order to enter to the device for tests use the command
