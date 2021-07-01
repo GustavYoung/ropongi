@@ -1,3 +1,7 @@
+/*
+The first function launched is mainStart();
+Then it follows the steps determined by the logic of the script
+*/
 'use strict';
 var fs = new require('fs'),
     os = new require('os'),
@@ -2025,6 +2029,11 @@ function skipToNextMillisLink() {
     return milisLinks.fullCircle;
 }
 
+/*
+The music is gonna be played when the function  initialize(); is triggered 
+in earlier versions the initialize trigger was in eventEmitter.on('timeSet', initialize);
+but after the api of time was shuted down we moved the trigger after the init steps.
+*/
 function mainStart() {
     makeMaindirs();
     makeDaydirs();
