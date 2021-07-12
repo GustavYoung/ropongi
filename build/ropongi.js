@@ -11,7 +11,7 @@ class Ropongi {
         this.configs = { output: 'local', logs: true, schedulesType: 'genres', autoShutdown: false };
         this.email = { service: 'gmail', auth: { user: '@@gmail.com', pass: '0' } };
         this.events = require('events');
-        this.eventEmitter = this.events.EventEmitter();
+        this.eventEmitter = new this.events.EventEmitter();
         this.exec = require('child_process').exec;
         this.filetypes = ['mkv', 'mp4', 'mp3', 'avi', 'mpeg'];
         this.fs = require('fs');
@@ -52,7 +52,6 @@ class Ropongi {
         this.version = '0.7.1';
         this.weekday = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         this.wifiCheck = { status: true, minutes: 10 };
-        const that = this;
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
         this.omx.on('play', (path) => {
@@ -61,20 +60,10 @@ class Ropongi {
                 return;
             // Test por string
             let file = pathArray.pop();
-            this.logAndPrint('info', 'playing index: ' + (that.playlist.files.indexOf(file) + 1) + '/' + that.playlist.files.length + ' : ' + file + ' in ' + that.playlist.directory + ' folder.');
+            this.logAndPrint('info', 'playing index: ' + (this.playlist.files.indexOf(file) + 1) + '/' + this.playlist.files.length + ' : ' + file + ' in ' + this.playlist.directory + ' folder.');
         });
         this.omx.on('stderr', (err) => {
             this.logAndPrint('warningInfo', 'omxplayer error: ' + err);
-        });
-        process.on('exit', (code) => {
-            this.stopPlay().then(() => {
-                this.logAndPrint('info', 'ropongiStream exited: ' + code);
-            });
-        });
-        process.on('uncaughtException', (err) => {
-            this.logAndPrint('warningInfo', 'Caught exception message: ' + err.message);
-            // Not standard code, can couse isues.
-            this.logAndPrint('warningInfo', 'Caught exception at line: ' + err.lineNumber);
         });
         this.rl.on('line', (line) => {
             let arr;

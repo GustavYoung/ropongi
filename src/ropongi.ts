@@ -9,7 +9,7 @@ export class Ropongi {
     configs = { output: 'local', logs: true, schedulesType: 'genres', autoShutdown: false };
     email = { service: 'gmail', auth: { user: '@@gmail.com', pass: '0' } };
     events = require('events');
-    eventEmitter = this.events.EventEmitter();
+    eventEmitter = new this.events.EventEmitter();
     exec = require('child_process').exec;
     filetypes = ['mkv', 'mp4', 'mp3', 'avi', 'mpeg'];
     fs = require('fs');
@@ -56,7 +56,6 @@ export class Ropongi {
     constructor(
         
     ) {
-        const that = this;
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
         this.omx.on('play', (path: string) => {
@@ -65,24 +64,12 @@ export class Ropongi {
             
             // Test por string
             let file = pathArray.pop() as string;
-            this.logAndPrint('info', 'playing index: ' + (that.playlist.files.indexOf(file) + 1) + '/' + that.playlist.files.length + ' : ' + file + ' in ' + that.playlist.directory + ' folder.');
+            this.logAndPrint('info', 'playing index: ' + (this.playlist.files.indexOf(file) + 1) + '/' + this.playlist.files.length + ' : ' + file + ' in ' + this.playlist.directory + ' folder.');
         });
         this.omx.on('stderr', (err:Error) => {
             this.logAndPrint('warningInfo', 'omxplayer error: ' + err);
         });
 
-        process.on('exit', (code) => {
-            this.stopPlay().then(() => {
-                this.logAndPrint('info', 'ropongiStream exited: ' + code);
-            });
-        });
-
-        process.on('uncaughtException', (err:Error) => {
-            this.logAndPrint('warningInfo', 'Caught exception message: ' + err.message);
-            
-            // Not standard code, can couse isues.
-            this.logAndPrint('warningInfo', 'Caught exception at line: ' + err.lineNumber);
-        });
 
         this.rl.on('line', (line: string) => {
             let arr;
