@@ -17,6 +17,7 @@ class Ropongi {
         this._l = require('lodash');
         this.appdirs = ['uploads', 'saves', 'uploads/sharedday', 'logs', 'uploads/genres'];
         this.autoRandomMissingPlaylist = false;
+        this.basePath = __dirname + '/..';
         this.configs = { output: 'local', logs: true, schedulesType: 'genres', autoShutdown: false };
         this.email = { service: 'gmail', auth: { user: '@@gmail.com', pass: '0' } };
         this.events = require('events');
@@ -53,7 +54,7 @@ class Ropongi {
         this.schedulesStop = [];
         this.schedulesStopObject = [];
         this.schedulesType = ['days', 'genres'];
-        this.sharedday = __dirname + '/uploads/sharedday';
+        this.sharedday = this.basePath + '/uploads/sharedday';
         this.streaming = false;
         this.today = { name: null, index: null, dir: null };
         this.transporter = this.nodemailer.createTransport(this.email);
@@ -537,7 +538,7 @@ class Ropongi {
         });
     }
     logError(data) {
-        let path = __dirname + '/logs', fileName = 'omxplayer_errors.log';
+        let path = this.basePath + '/logs', fileName = 'omxplayer_errors.log';
         if (this.configs.logs)
             this.fs.appendFile(path + '/' + fileName, 'command: ' + data + '\n', (err) => {
                 if (err)
@@ -545,7 +546,7 @@ class Ropongi {
             });
     }
     logInput(input) {
-        let path = __dirname + '/logs', fileName = this.getDate() + '.log';
+        let path = this.basePath + '/logs', fileName = this.getDate() + '.log';
         if (this.configs.logs)
             this.fs.appendFile(path + '/' + fileName, 'command: ' + input + '\n', (err) => {
                 if (err)
@@ -574,7 +575,7 @@ class Ropongi {
             console.log('err: '.red + '(' + this.getTime() + ') ' + output);
             console.trace();
         }
-        const path = __dirname + '/logs';
+        const path = this.basePath + '/logs';
         const fileName = this.getDate() + '.log';
         if (this.configs.logs)
             this.fs.appendFile(path + '/' + fileName, type + ': (' + this.getTime() + ') ' + output + '\n', (err) => {
@@ -583,19 +584,19 @@ class Ropongi {
             });
     }
     saveWifiCheck() {
-        return !!this.fs.writeFileSync(__dirname + '/saves/wificheck.json', JSON.stringify(this.wifiCheck));
+        return !!this.fs.writeFileSync(this.basePath + '/saves/wificheck.json', JSON.stringify(this.wifiCheck));
     }
     saveConfigs() {
-        return !!this.fs.writeFileSync(__dirname + '/saves/configs.json', JSON.stringify(this.configs));
+        return !!this.fs.writeFileSync(this.basePath + '/saves/configs.json', JSON.stringify(this.configs));
     }
     savePassport() {
-        return !!this.fs.writeFileSync(__dirname + '/saves/passport.json', JSON.stringify(this.passport));
+        return !!this.fs.writeFileSync(this.basePath + '/saves/passport.json', JSON.stringify(this.passport));
     }
     saveEmail() {
-        return !!this.fs.writeFileSync(__dirname + '/saves/email.json', JSON.stringify(this.email));
+        return !!this.fs.writeFileSync(this.basePath + '/saves/email.json', JSON.stringify(this.email));
     }
     saveGenres() {
-        return !!this.fs.writeFileSync(__dirname + '/saves/genres.json', JSON.stringify(this.genres));
+        return !!this.fs.writeFileSync(this.basePath + '/saves/genres.json', JSON.stringify(this.genres));
     }
     addGenres(genresArr) {
         let addedGenres = '';
@@ -604,8 +605,8 @@ class Ropongi {
             if (this.genres.indexOf(genresArr[i]) === -1 && genresArr[i] !== 'all') {
                 addedGenres += genresArr[i] + ' ';
                 this.genres.push(genresArr[i]);
-                if (!this.fs.existsSync(__dirname + '/uploads/genres/' + genresArr[i])) {
-                    this.fs.mkdirSync(__dirname + '/uploads/genres/' + genresArr[i]);
+                if (!this.fs.existsSync(this.basePath + '/uploads/genres/' + genresArr[i])) {
+                    this.fs.mkdirSync(this.basePath + '/uploads/genres/' + genresArr[i]);
                 }
             }
         }
@@ -657,15 +658,15 @@ class Ropongi {
     }
     loadGenres() {
         let tempGenres = this.genres;
-        if (this.fs.existsSync(__dirname + '/saves/genres.json')) {
+        if (this.fs.existsSync(this.basePath + '/saves/genres.json')) {
             try {
-                this.genres = JSON.parse(this.fs.readFileSync(__dirname + '/saves/genres.json'));
+                this.genres = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/genres.json'));
                 for (let i in this.genres)
-                    if (!this.fs.existsSync(__dirname + '/uploads/genres/' + this.genres[i]))
-                        this.fs.mkdirSync(__dirname + '/uploads/genres/' + this.genres[i]);
+                    if (!this.fs.existsSync(this.basePath + '/uploads/genres/' + this.genres[i]))
+                        this.fs.mkdirSync(this.basePath + '/uploads/genres/' + this.genres[i]);
             }
             catch (err) {
-                this.fs.unlinkSync(__dirname + '/saves/genres.json');
+                this.fs.unlinkSync(this.basePath + '/saves/genres.json');
                 this.logAndPrint('fail', 'genres.json damaged, and deleted.');
                 this.genres = tempGenres;
                 return false;
@@ -675,12 +676,12 @@ class Ropongi {
     }
     loadEmail() {
         let tempEmail = this.email;
-        if (this.fs.existsSync(__dirname + '/saves/email.json')) {
+        if (this.fs.existsSync(this.basePath + '/saves/email.json')) {
             try {
-                this.email = JSON.parse(this.fs.readFileSync(__dirname + '/saves/email.json'));
+                this.email = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/email.json'));
             }
             catch (err) {
-                this.fs.unlinkSync(__dirname + '/saves/email.json');
+                this.fs.unlinkSync(this.basePath + '/saves/email.json');
                 this.logAndPrint('fail', 'email.json damaged, and deleted.');
                 this.email = tempEmail;
                 return false;
@@ -691,13 +692,13 @@ class Ropongi {
     }
     loadConfigs() {
         let tempConfigs = this.configs;
-        if (this.fs.existsSync(__dirname + '/saves/configs.json')) {
+        if (this.fs.existsSync(this.basePath + '/saves/configs.json')) {
             try {
-                this.configs = JSON.parse(this.fs.readFileSync(__dirname + '/saves/configs.json'));
+                this.configs = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/configs.json'));
                 this.omxconfig['-o'] = this.configs.output;
             }
             catch (err) {
-                this.fs.unlinkSync(__dirname + '/saves/configs.json');
+                this.fs.unlinkSync(this.basePath + '/saves/configs.json');
                 this.logAndPrint('fail', 'configs.json damaged, and deleted.');
                 this.configs = tempConfigs;
                 return false;
@@ -707,12 +708,12 @@ class Ropongi {
     }
     loadPassport() {
         let tempConfigs = this.passport;
-        if (this.fs.existsSync(__dirname + '/saves/passport.json')) {
+        if (this.fs.existsSync(this.basePath + '/saves/passport.json')) {
             try {
-                this.passport = JSON.parse(this.fs.readFileSync(__dirname + '/saves/passport.json'));
+                this.passport = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/passport.json'));
             }
             catch (err) {
-                this.fs.unlinkSync(__dirname + '/saves/passport.json');
+                this.fs.unlinkSync(this.basePath + '/saves/passport.json');
                 this.logAndPrint('fail', 'passport.json damaged, and deleted.');
                 this.passport = tempConfigs;
                 return false;
@@ -722,12 +723,12 @@ class Ropongi {
     }
     loadWifiCheck() {
         let tempWifiCheck = this.wifiCheck;
-        if (this.fs.existsSync(__dirname + '/saves/wificheck.json')) {
+        if (this.fs.existsSync(this.basePath + '/saves/wificheck.json')) {
             try {
-                this.wifiCheck = JSON.parse(this.fs.readFileSync(__dirname + '/saves/wificheck.json'));
+                this.wifiCheck = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/wificheck.json'));
             }
             catch (err) {
-                this.fs.unlinkSync(__dirname + '/saves/wificheck.json');
+                this.fs.unlinkSync(this.basePath + '/saves/wificheck.json');
                 this.logAndPrint('fail', 'wificheck.json damaged, and deleted.');
                 this.wifiCheck = tempWifiCheck;
                 return false;
@@ -742,7 +743,7 @@ class Ropongi {
                 currentIndex: this.playlist.currentIndex,
                 directory: this.playlist.directory
             };
-            this.fs.writeFileSync(__dirname + '/saves/lastplay.json', JSON.stringify(this.lastPlay));
+            this.fs.writeFileSync(this.basePath + '/saves/lastplay.json', JSON.stringify(this.lastPlay));
         }
         else if (this.isGenresMode()) {
             let modifed = false;
@@ -760,18 +761,18 @@ class Ropongi {
                     currentIndex: this.playlist.currentIndex,
                     directory: this.playlist.directory
                 });
-            this.fs.writeFileSync(__dirname + '/saves/lastgenresplays.json', JSON.stringify(this.lastGenresPlays));
+            this.fs.writeFileSync(this.basePath + '/saves/lastgenresplays.json', JSON.stringify(this.lastGenresPlays));
         }
     }
     loadLastPlay() {
         if (this.isDaysMode()) {
             let tempLastPlay = this.lastPlay;
-            if (this.fs.existsSync(__dirname + '/saves/lastplay.json')) {
+            if (this.fs.existsSync(this.basePath + '/saves/lastplay.json')) {
                 try {
-                    this.lastPlay = JSON.parse(this.fs.readFileSync(__dirname + '/saves/lastplay.json'));
+                    this.lastPlay = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/lastplay.json'));
                 }
                 catch (err) {
-                    this.fs.unlinkSync(__dirname + '/saves/lastplay.json');
+                    this.fs.unlinkSync(this.basePath + '/saves/lastplay.json');
                     this.logAndPrint('fail', 'lastplay.json damaged, and deleted.');
                     this.lastPlay = tempLastPlay;
                     return false;
@@ -785,12 +786,12 @@ class Ropongi {
         }
         else if (this.isGenresMode()) {
             let tempLastGenresPlays = this.lastGenresPlays;
-            if (this.fs.existsSync(__dirname + '/saves/lastgenresplays.json')) {
+            if (this.fs.existsSync(this.basePath + '/saves/lastgenresplays.json')) {
                 try {
-                    this.lastGenresPlays = JSON.parse(this.fs.readFileSync(__dirname + '/saves/lastgenresplays.json'));
+                    this.lastGenresPlays = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/lastgenresplays.json'));
                 }
                 catch (err) {
-                    this.fs.unlinkSync(__dirname + '/saves/lastgenresplays.json');
+                    this.fs.unlinkSync(this.basePath + '/saves/lastgenresplays.json');
                     this.logAndPrint('fail', 'lastgenresplays.json damaged, and deleted.');
                     this.lastGenresPlays = tempLastGenresPlays;
                     return false;
@@ -806,13 +807,13 @@ class Ropongi {
     }
     loadLastGenresPlays() {
         let tempLastGenresPlays = this.lastGenresPlays;
-        if (this.fs.existsSync(__dirname + '/saves/lastgenresplays.json')) {
+        if (this.fs.existsSync(this.basePath + '/saves/lastgenresplays.json')) {
             try {
-                this.lastGenresPlays = JSON.parse(this.fs.readFileSync(__dirname + '/saves/lastgenresplays.json'));
+                this.lastGenresPlays = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/lastgenresplays.json'));
                 return true;
             }
             catch (err) {
-                this.fs.unlinkSync(__dirname + '/saves/lastgenresplays.json');
+                this.fs.unlinkSync(this.basePath + '/saves/lastgenresplays.json');
                 this.logAndPrint('fail', 'lastgenresplays.json damaged, and deleted.');
                 this.lastGenresPlays = tempLastGenresPlays;
                 return false;
@@ -820,7 +821,7 @@ class Ropongi {
         }
     }
     saveLastGenresPlays() {
-        return !!this.fs.writeFileSync(__dirname + '/saves/lastgenresplays.json', JSON.stringify(this.lastGenresPlays));
+        return !!this.fs.writeFileSync(this.basePath + '/saves/lastgenresplays.json', JSON.stringify(this.lastGenresPlays));
     }
     setWifiCheck(status, minutes) {
         if (this.wifiCheckIntervalObject)
@@ -935,15 +936,15 @@ class Ropongi {
     }
     makeMaindirs() {
         for (let i in this.appdirs) {
-            if (!this.fs.existsSync(__dirname + '/' + this.appdirs[i])) {
-                this.fs.mkdirSync(__dirname + '/' + this.appdirs[i]);
+            if (!this.fs.existsSync(this.basePath + '/' + this.appdirs[i])) {
+                this.fs.mkdirSync(this.basePath + '/' + this.appdirs[i]);
             }
         }
     }
     makeDaydirs() {
         for (let i in this.weekday) {
-            if (!this.fs.existsSync(__dirname + '/uploads/' + this.weekday[i])) {
-                this.fs.mkdirSync(__dirname + '/uploads/' + this.weekday[i]);
+            if (!this.fs.existsSync(this.basePath + '/uploads/' + this.weekday[i])) {
+                this.fs.mkdirSync(this.basePath + '/uploads/' + this.weekday[i]);
             }
         }
     }
@@ -1215,12 +1216,12 @@ class Ropongi {
         return -1;
     }
     loadSchedules() {
-        if (this.fs.existsSync(__dirname + '/saves/tasks.json')) {
+        if (this.fs.existsSync(this.basePath + '/saves/tasks.json')) {
             try {
-                this.schedules = JSON.parse(this.fs.readFileSync(__dirname + '/saves/tasks.json'));
+                this.schedules = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/tasks.json'));
             }
             catch (err) {
-                this.fs.unlinkSync(__dirname + '/saves/tasks.json');
+                this.fs.unlinkSync(this.basePath + '/saves/tasks.json');
                 this.logAndPrint('fail', 'tasks.json damaged, and deleted.');
             }
         }
@@ -1242,7 +1243,7 @@ class Ropongi {
         }
     }
     saveSchedules() {
-        if (this.fs.writeFileSync(__dirname + '/saves/tasks.json', JSON.stringify(this.schedules))) {
+        if (this.fs.writeFileSync(this.basePath + '/saves/tasks.json', JSON.stringify(this.schedules))) {
             this.logAndPrint('pass', 'tasks list:');
         }
     }
@@ -1257,7 +1258,7 @@ class Ropongi {
             directory: ''
         };
         this.playlist.directory = day;
-        this.playlist.path = __dirname + '/uploads/' + this.playlist.directory;
+        this.playlist.path = this.basePath + '/uploads/' + this.playlist.directory;
         if (!this.fs.existsSync(this.playlist.path + '/_playlist.m3u')) {
             this.logAndPrint('info', 'creating playlist of ' + this.playlist.directory);
             this.createPlayListSwitch([this.playlist.directory], this.autoRandomMissingPlaylist, false);
@@ -1319,7 +1320,7 @@ class Ropongi {
     }
     delPlayList(day) {
         if (this.isRealDayName(day)) {
-            let daydir = __dirname + '/uploads/' + day;
+            let daydir = this.basePath + '/uploads/' + day;
             if (this.fs.existsSync(daydir + '/_playlist.m3u')) {
                 this.fs.unlinkSync(daydir + '/_playlist.m3u');
                 this.logAndPrint('pass', day + ' playlist deleted.');
@@ -1364,7 +1365,7 @@ class Ropongi {
             endi = 7;
         }
         for (i; i < endi; i++) {
-            daydir = __dirname + '/uploads/' + this.weekday[i];
+            daydir = this.basePath + '/uploads/' + this.weekday[i];
             if (this.fs.existsSync(daydir)) {
                 files = this.getOnlyPlayFiles(this.fs.readdirSync(daydir + '/'));
                 if (shared)
@@ -1418,7 +1419,7 @@ class Ropongi {
         this.today = {
             name: name,
             index: this.weekday.indexOf(name),
-            dir: __dirname + '/uploads/' + name
+            dir: this.basePath + '/uploads/' + name
         };
         return this.today;
     }
@@ -1634,7 +1635,7 @@ class Ropongi {
         });
     }
     getListOfGenresDirs() {
-        let path = __dirname + '/uploads/genres', dirs = [], files = [];
+        let path = this.basePath + '/uploads/genres', dirs = [], files = [];
         try {
             files = this.fs.readdirSync(path);
         }
@@ -1712,7 +1713,7 @@ class Ropongi {
         if (this.isRealGenre(genre)) {
             this.delGenrePlaylist(genre);
             this.saveLastGenresPlays();
-            let playdir = __dirname + '/uploads/genres/' + genre;
+            let playdir = this.basePath + '/uploads/genres/' + genre;
             if (this.fs.existsSync(playdir + '/_playlist.m3u')) {
                 this.fs.unlinkSync(playdir + '/_playlist.m3u');
                 this.logAndPrint('pass', genre + ' playlist deleted.');
@@ -1748,7 +1749,7 @@ class Ropongi {
             endi = genres.length;
         }
         for (i; i < endi; i++) {
-            genredir = __dirname + '/uploads/genres/' + genres[i];
+            genredir = this.basePath + '/uploads/genres/' + genres[i];
             if (this.fs.existsSync(genredir)) {
                 files = this.getOnlyPlayFiles(this.fs.readdirSync(genredir + '/'));
                 if (this.util.isArray(files)) {
@@ -1787,17 +1788,17 @@ class Ropongi {
             genres: this.schedulesGenres,
             spliters: this.schedulesGenresSpliters
         };
-        return !!this.fs.writeFileSync(__dirname + '/saves/tasksgenres.json', JSON.stringify(obj));
+        return !!this.fs.writeFileSync(this.basePath + '/saves/tasksgenres.json', JSON.stringify(obj));
     }
     loadSchedulesGenresAndSpliters() {
-        if (this.fs.existsSync(__dirname + '/saves/tasksgenres.json')) {
+        if (this.fs.existsSync(this.basePath + '/saves/tasksgenres.json')) {
             try {
-                let obj = JSON.parse(this.fs.readFileSync(__dirname + '/saves/tasksgenres.json'));
+                let obj = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/tasksgenres.json'));
                 this.schedulesGenres = obj.genres;
                 this.schedulesGenresSpliters = obj.spliters;
             }
             catch (err) {
-                this.fs.unlinkSync(__dirname + '/saves/tasksgenres.json');
+                this.fs.unlinkSync(this.basePath + '/saves/tasksgenres.json');
                 this.logAndPrint('fail', 'tasksgenres.json damaged, and deleted.');
                 return false;
             }
@@ -1942,7 +1943,7 @@ class Ropongi {
         if (!genre)
             return false;
         this.playlist.directory = genre;
-        this.playlist.path = __dirname + '/uploads/genres/' + this.playlist.directory;
+        this.playlist.path = this.basePath + '/uploads/genres/' + this.playlist.directory;
         if (!this.fs.existsSync(this.playlist.path + '/_playlist.m3u')) {
             this.logAndPrint('info', 'creating this.playlist of ' + this.playlist.directory);
             this.createPlayListSwitch([this.playlist.directory], this.autoRandomMissingPlaylist, false);
