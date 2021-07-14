@@ -1,5 +1,7 @@
 node_modules/
 Notas
 logs/
+saves/
 .vscode/
 programacion actual.txt
+*.m3u
