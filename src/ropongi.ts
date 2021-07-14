@@ -56,6 +56,7 @@ export class Ropongi {
     constructor(
         
     ) {
+        console.log( 'constructor() initiated');
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
         this.omx.on('play', (path: string) => {
@@ -64,11 +65,13 @@ export class Ropongi {
             
             // Test por string
             let file = pathArray.pop() as string;
-            this.logAndPrint('info', 'playing index: ' + (this.playlist.files.indexOf(file) + 1) + '/' + this.playlist.files.length + ' : ' + file + ' in ' + this.playlist.directory + ' folder.');
+            this.logAndPrint('info', 'playing index: ' + (this.playlist.files.indexOf(file) + 1) 
+            + '/' + this.playlist.files.length + ' : ' + file + ' in ' + this.playlist.directory + ' folder.');
         });
         this.omx.on('stderr', (err:Error) => {
             this.logAndPrint('warningInfo', 'omxplayer error: ' + err);
         });
+        console.log( 'omx ready');
 
 
         this.rl.on('line', (line: string) => {
@@ -174,6 +177,7 @@ export class Ropongi {
                             break;
                         case 'task':
                             arr = line.trim().split(' ').slice(2);
+                            console.log(arr);
                             if (arr.length === 1) this.delSchedule(arr[0]);
                             else this.logAndPrint('fail', 'input must be 1 parameter.');
                             break;
@@ -193,6 +197,7 @@ export class Ropongi {
                         case 'email':
                             {
                                 let arr = line.trim().split(' ').slice(2);
+                                console.log(arr);
                                 if (arr.length === 2) this.setEmail(arr[0], arr[1]);
                                 else this.logAndPrint('fail', 'input must be 2 parameters (email pass).'.bold);
                                 break;
@@ -200,6 +205,7 @@ export class Ropongi {
                         case 'task':
                             {
                                 let arr = line.trim().split(' ').slice(2);
+                                console.log(arr);
                                 if (arr.length === 3) this.addSchedule(arr[0], arr[1], arr[2]);
                                 else if (arr.length === 4) this.addSchedule(arr[0], arr[1], arr[2], arr[3]);
                                 else this.logAndPrint('fail', 'input must be 3 or 4 parameters.'.bold);
@@ -302,6 +308,8 @@ export class Ropongi {
                     break;
             }
         });
+
+        console.log( 'rl ready');
     }
 
     chmodRAll() {
@@ -519,17 +527,31 @@ export class Ropongi {
     }
     
     logAndPrint(type: string, output: any) {
-        if (type === 'pass') console.log('pass: '.green + '(' + this.getTime() + ') ' + output);
-        else if (type === 'passInfo') console.log('pass: '.cyan + '(' + this.getTime() + ') ' + output);
-        else if (type === 'info') console.log('info: '.cyan + '(' + this.getTime() + ') ' + output);
-        else if (type === 'warningInfo') console.log('info: '.red + '(' + this.getTime() + ') ' + output);
-        else if (type === 'fail') console.log('fail: '.red + '(' + this.getTime() + ') ' + output);
-        else if (type === 'err') console.log('err: '.red + '(' + this.getTime() + ') ' + output);
-        let path = __dirname + '/logs',
-            fileName = this.getDate() + '.log';
+        if (type === 'pass'){
+             console.log('pass: '.green + '(' + this.getTime() + ') ' + output);
+        } else if (type === 'passInfo') {
+            console.log('pass: '.cyan + '(' + this.getTime() + ') ' + output);
+        }
+        else if (type === 'info') {
+             console.log('info: '.cyan + '(' + this.getTime() + ') ' + output);
+        } else if (type === 'warningInfo') {
+            console.log('info: '.red + '(' + this.getTime() + ') ' + output);
+            console.trace();
+        } else if (type === 'fail') {
+            console.log('fail: '.red + '(' + this.getTime() + ') ' + output);
+            console.trace();
+        } else if (type === 'err') {
+            console.log('err: '.red + '(' + this.getTime() + ') ' + output);
+            console.trace();
+        }
+
+        const path = __dirname + '/logs';
+        const fileName = this.getDate() + '.log';
+
         if (this.configs.logs) this.fs.appendFile(path + '/' + fileName, type + ': (' + this.getTime() + ') ' + output + '\n', (err: string) => {
             if (err) console.log('info: '.red + '(' + this.getTime() + ') ' + 'failing to write log, ' + err);
         });
+        
     }
     
     saveWifiCheck() {
@@ -1962,18 +1984,29 @@ export class Ropongi {
     in earlier versions the initialize trigger was in eventEmitter.on('timeSet', initialize);
     but after the api of time was shuted down we moved the trigger after the init steps.
     */
-    public mainStart() {
+    public async mainStart() {
+        console.log('mainStart() initiated.')
         this.makeMaindirs();
+        console.log('Done: this.makeMaindirs() at mainStart().');
         this.makeDaydirs();
+        console.log('Done: this.makeDaydirs() at mainStart().');
         this.chmodRAll();
+        console.log('Done: this.chmodRAll() at mainStart().');
         this.loadConfigs();
+        console.log('Done: this.loadConfigs() at mainStart().');
         this.loadPassport();
+        console.log('Done: this.loadPassport() at mainStart().');
         this.loadEmail();
+        console.log('Done: this.loadEmail() at mainStart().');
         this.loadWifiCheck();
+        console.log('Done: this.loadWifiCheck() at mainStart().');
         this.loadGenres();
+        console.log('Done: this.loadGenres() at mainStart().');
         this.initialize();
+        console.log('Done: this.initialize() at mainStart().');
         if (this.wifiCheck.status){
             this.checkWifi();
+            console.log('Done: this.checkWifi() at mainStart().');
         } 
         this.eventEmitter.on('timeSet', this.chmodRAll);
         this.eventEmitter.on('timeNotSet', (err: { code: number; }) =>  {
@@ -1981,19 +2014,21 @@ export class Ropongi {
             if (err.code === 0 && !fullCircle) {
                 this.logAndPrint('fail', 'next timeset attempt in 10s')
                 clearTimeout(this.setTimeTimeout);
-                this.setTimeTimeout = setTimeout(this.setTime, 10 * 1000);
+                this.setTimeTimeout = setTimeout(() => this.setTime, 10 * 1000);
             } else if (err.code === 1 && !fullCircle) {
                 this.logAndPrint('info', 'next timeset attempt in 10s')
                 clearTimeout(this.setTimeTimeout);
-                this.setTimeTimeout = setTimeout(this.setTime, 10 * 1000);
+                this.setTimeTimeout = setTimeout(() => this.setTime, 10 * 1000);
             } else if (fullCircle) {
                 this.logAndPrint('info', 'next timeset attempt in 60s after attempting all servers')
                 clearTimeout(this.setTimeTimeout);
-                this.setTimeTimeout = setTimeout(this.setTime, 60 * 1000);
+                this.setTimeTimeout = setTimeout(() => this.setTime, 60 * 1000);
                 this.milisLinks.fullCircle = false;
             }
         });
+        console.log('Done: this.eventEmitter set at mainStart().');
         this.enableRTC().then(this.setTime, this.setTime);
+        console.log('Done: this.enableRTC() at mainStart().');
     }
     
     initialize() {
@@ -2002,7 +2037,7 @@ export class Ropongi {
             this.loadLastGenresPlays();
             this.loadSchedules();
             this.loadSchedulesGenresAndSpliters();
-            setTimeout(this.runSchedules, 5 * 1000);
+            setTimeout(() => this.runSchedules, 5 * 1000);
         });
         this.sendMail();
         setInterval(() => {
