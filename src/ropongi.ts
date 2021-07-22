@@ -7,7 +7,7 @@ export class Ropongi {
     appdirs = ['uploads', 'saves', 'uploads/sharedday', 'logs', 'uploads/genres'];
     autoRandomMissingPlaylist = false;
     basePath = __dirname + '/..';
-    configs = { output: 'local', logs: true, schedulesType: 'genres', autoShutdown: false };
+    configs = { output: 'local', logs: true, debug: true, schedulesType: 'genres', autoShutdown: false };
     email = { service: 'gmail', auth: { user: '@@gmail.com', pass: '0' } };
     events = require('events');
     eventEmitter = new this.events.EventEmitter();
@@ -57,7 +57,6 @@ export class Ropongi {
     constructor(
         
     ) {
-        console.log( 'constructor() initiated');
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
         this.omx.on('play', (path: string) => {
@@ -70,10 +69,8 @@ export class Ropongi {
             + '/' + this.playlist.files.length + ' : ' + file + ' in ' + this.playlist.directory + ' folder.');
         });
         this.omx.on('stderr', (err:Error) => {
-            this.logAndPrint('warningInfo', 'omxplayer error: ' + err);
+            this.logAndPrint('err', 'omxplayer error: ' + err.message, err);
         });
-        console.log( 'omx ready');
-
 
         this.rl.on('line', (line: string) => {
             let arr;
@@ -97,8 +94,8 @@ export class Ropongi {
                 case 'start':
                     this.playIfPlayTime().then(() => {
                         this.logAndPrint('pass', 'starting stream.');
-                    }, (err: { message: any; })  => {
-                        this.logAndPrint('pass', err.message);
+                    }, (err: Error)  => {
+                        this.logAndPrint('err', err.message, err);
                     });
                     break;
                 case 'tasks':
@@ -178,7 +175,6 @@ export class Ropongi {
                             break;
                         case 'task':
                             arr = line.trim().split(' ').slice(2);
-                            console.log(arr);
                             if (arr.length === 1) this.delSchedule(arr[0]);
                             else this.logAndPrint('fail', 'input must be 1 parameter.');
                             break;
@@ -198,7 +194,6 @@ export class Ropongi {
                         case 'email':
                             {
                                 let arr = line.trim().split(' ').slice(2);
-                                console.log(arr);
                                 if (arr.length === 2) this.setEmail(arr[0], arr[1]);
                                 else this.logAndPrint('fail', 'input must be 2 parameters (email pass).'.bold);
                                 break;
@@ -206,7 +201,6 @@ export class Ropongi {
                         case 'task':
                             {
                                 let arr = line.trim().split(' ').slice(2);
-                                console.log(arr);
                                 if (arr.length === 3) this.addSchedule(arr[0], arr[1], arr[2]);
                                 else if (arr.length === 4) this.addSchedule(arr[0], arr[1], arr[2], arr[3]);
                                 else this.logAndPrint('fail', 'input must be 3 or 4 parameters.'.bold);
@@ -309,8 +303,6 @@ export class Ropongi {
                     break;
             }
         });
-
-        console.log( 'rl ready');
     }
 
     chmodRAll() {
@@ -318,28 +310,54 @@ export class Ropongi {
     }
     
     checkWifi() {
-        this.exec('sudo ifconfig wlan0', (error: any, stdout: string | string[], stderr: any) => {
+        this.exec('sudo ifconfig wlan0', (error: Error, stdout: string | string[], stderr: string|Buffer) => {
+            if (error) {
+                this.logAndPrint('err', `exec error: ${error}`, error);
+            }
+            if(stderr){
+                this.logAndPrint('fail', `stderr: ${stderr}`)
+            }
             if (stdout && stdout.indexOf('inet addr:') === -1) {
-                this.exec('sudo ifdown --force wlan0', (error: any, stdout: any, stderr: any) => {
+                this.exec('sudo ifdown --force wlan0', (error: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                    if (error) {
+                        this.logAndPrint('err', `exec error: ${error}`, error);
+                        return;
+                    }
+                    if(stderr){
+                        this.logAndPrint('fail', `stderr: ${stderr}`)
+                    }
                     setTimeout(()  => {
-                        this.exec('sudo ifup --force wlan0', (error: any, stdout: any, stderr: any) => {
-                            // this.logAndPrint('pass', 'wifi restarted.');
+                        this.exec('sudo ifup --force wlan0', (error: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                            if (error) {
+                                this.logAndPrint('err', `exec error: ${error}`, error);
+                                return;
+                            }
+                            if(stderr){
+                                this.logAndPrint('fail', `stderr: ${stderr}`)
+                            }
+                            this.logAndPrint('pass', 'wifi restarted.');
                         });
                     }, 5 * 1000);
                 });
             }
         });
     }
-    
+
     updateToRTC(cb = null) {
         if (this.rtc) {
-            this.exec('sudo hwclock -w', (err: any, stdout: any, stderr: any) => {
-                if (!err) {
+            this.exec('sudo hwclock -w', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                if(stderr){
+                    this.logAndPrint('fail', `stderr: ${stderr}`)
+                }
+                if (err) {
+                    this.logAndPrint('err', `RTC couldnt be updated from system time, RTC error: ${err}`, err);
+                } else {
                     this.logAndPrint('info', 'RTC updated from system clock: ' + new Date());
-                } else if (err) {
-                    this.logAndPrint('warningInfo', 'RTC couldnt be updated from system time, RTC error');
                 }
-                if (cb) cb(err);
+
+                if (cb) {
+                    cb(err);
+                } 
             });
         } else {
             if (cb) cb({
@@ -347,37 +365,45 @@ export class Ropongi {
             });
         }
     }
-    
-    updateFromRTC(cb: { (err: any): void; (err: any): void; (err: any): void; (err: any): void; (arg0: { err: string; }): void; }) {
+
+    updateFromRTC(cb: (err: Error|string) => void) {
         if (this.rtc) {
-            this.exec('sudo hwclock -s', (err: any, stdout: any, stderr: any) => {
-                if (!err) {
-                    this.logAndPrint('info', 'system clock updated from RTC: ' + new Date());
-                } else if (err) {
-                    this.logAndPrint('warningInfo', 'system time couldnt be updated from RTC, RTC error');
+            this.exec('sudo hwclock -s', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                if(stderr){
+                    this.logAndPrint('fail', `stderr: ${stderr}`)
                 }
-                if (cb) cb(err);
+                if (err) {
+                    this.logAndPrint('err', `RTC couldnt be updated from system time, RTC error: ${err}`, err);
+                } else {
+                    this.logAndPrint('info', 'system clock updated from RTC: ' + new Date());
+                }
+
+                if (cb) {
+                    cb(err);
+                }
             });
         } else {
-            if (cb) cb({
-                err: 'no RTC available'
-            });
+            if (cb) cb('no RTC available');
         }
     }
-    
+
     enableRTC(cb: undefined) {
         let deferred = this.q.defer();
-        this.exec('sudo echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device', (err: { code: number; }, stdout: any, stderr: any) => {
-            this.rtc = (!err || err && err.code == 1) ? true : false;
+        this.exec('sudo echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device', (err: NodeJS.ErrnoException, stdout: string|Buffer, stderr: string|Buffer) => {
+            if(stderr){
+                this.logAndPrint('fail', `stderr: ${stderr}`)
+            }
+            this.rtc = (!err || (err && err.code == '1')) ? true : false;
             if (this.rtc) {
                 deferred.resolve();
             } else {
+                this.logAndPrint('err', `exec error: ${err}`, err);
                 deferred.reject(err);
             }
         });
         return deferred.promise;
     }
-    
+
     isJsonObject(data: string) {
         let object;
         try {
@@ -387,16 +413,23 @@ export class Ropongi {
         }
         return (typeof object === 'object');
     }
-    
+
     resetMilisLinks() {
         this.milisLinks.index = 0;
         this.milisLinks.fullCircle = false;
     }
-    
+
     setTimeManual(millis: string) {
         if (millis && millis.toString().length === 13) {
             clearTimeout(this.setTimeTimeout);
-            this.exec('sudo date --set="' + new Date(parseInt(millis)) + '"', (err: any, stdout: any, stderr: any) => {
+            this.exec('sudo date --set="' + new Date(parseInt(millis)) + '"', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                if (err) {
+                    this.logAndPrint('err', `exec err: ${err}`, err);
+                    return;
+                }
+                if(stderr){
+                    this.logAndPrint('fail', `stderr: ${stderr}`)
+                }
                 if (stdout) {
                     this.logAndPrint('info', 'time set to: ' + new Date());
                     this.updateToRTC();
@@ -406,7 +439,7 @@ export class Ropongi {
             });
         }
     }
-    
+
     setTimeProxy() {
         this.logAndPrint('info', 'attempt to load time from: ' + this.milisLinks.links[this.milisLinks.index].split('/')[2]);
         let proxy = {
@@ -422,7 +455,14 @@ export class Ropongi {
             res.on('end', () => {
                 let millis = this.getMillis(stringData);
                 if (millis) {
-                    this.exec('sudo date --set="' + new Date(millis) + '"', (err: any, stdout: any, stderr: any) => {
+                    this.exec('sudo date --set="' + new Date(millis) + '"', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                        if (err) {
+                            this.logAndPrint('err', `exec err: ${err}`, err);
+                            return;
+                        }
+                        if(stderr){
+                            this.logAndPrint('fail', `stderr: ${stderr}`)
+                        }
                         if (stdout) {
                             this.logAndPrint('info', 'time set to: ' + new Date());
                             this.updateToRTC();
@@ -432,8 +472,13 @@ export class Ropongi {
                     });
                 } else {
                     this.logAndPrint('warningInfo', 'time not set, bad response from millis server: ' + this.milisLinks.links[this.milisLinks.index]);
-                    this.updateFromRTC((err: any) => {
+                    this.updateFromRTC((err: Error|string) => {
                         if (err) {
+                            if (typeof err == 'string'){
+                                this.logAndPrint('fail', `stderr: ${err}`);
+                            } else {
+                                this.logAndPrint('err', `exec error: ${err}`, err);
+                            }
                             this.eventEmitter.emit('timeNotSet', {
                                 msg: 'bad response from ' + this.milisLinks.links[this.milisLinks.index],
                                 code: 0
@@ -445,10 +490,15 @@ export class Ropongi {
                     });
                 }
             });
-        }).on('error', (err: any) => {
+        }).on('error', (err: Error) => {
             this.logAndPrint('warningInfo', 'time not set, no response from millis server: ' + this.milisLinks.links[this.milisLinks.index]);
-            this.updateFromRTC((err: any) => {
+            this.updateFromRTC((err: Error|string) => {
                 if (err) {
+                    if (typeof err == 'string'){
+                        this.logAndPrint('fail', `stderr: ${err}`);
+                    } else {
+                        this.logAndPrint('err', `exec error: ${err}`, err);
+                    }
                     this.eventEmitter.emit('timeNotSet', {
                         msg: 'no response from ' + this.milisLinks.links[this.milisLinks.index],
                         code: 1
@@ -467,12 +517,17 @@ export class Ropongi {
             let stringData = "";
             res.on("data", (data: string) => {
                 stringData += data;
-                //this.logAndPrint('info', 'fecha raw' + stringData);
             });
             res.on('close', () => {
                 let millis = this.getMillis(stringData);
                 if (millis) {
-                    this.exec('sudo date --set="' + new Date(millis) + '"', (err: any, stdout: any, stderr: any) => {
+                    this.exec('sudo date --set="' + new Date(millis) + '"', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                        if (err) {
+                            this.logAndPrint('err', `exec err: ${err}`, err);
+                        }
+                        if(stderr){
+                            this.logAndPrint('fail', `stderr: ${stderr}`)
+                        }
                         if (stdout) {
                             this.logAndPrint('info', 'time set to: ' + new Date());
                             this.updateToRTC();
@@ -482,8 +537,13 @@ export class Ropongi {
                     });
                 } else {
                     this.logAndPrint('warningInfo', 'time not set, bad response from millis server: ' + this.milisLinks.links[this.milisLinks.index]);
-                    this.updateFromRTC((err: any) => {
+                    this.updateFromRTC((err: Error|string) => {
                         if (err) {
+                            if (typeof err == 'string'){
+                                this.logAndPrint('fail', `stderr: ${err}`);
+                            } else {
+                                this.logAndPrint('err', `exec error: ${err}`, err);
+                            }
                             this.eventEmitter.emit('timeNotSet', {
                                 msg: 'bad response from ' + this.milisLinks.links[this.milisLinks.index],
                                 code: 0
@@ -495,10 +555,15 @@ export class Ropongi {
                     });
                 }
             });
-        }).on('error', (err: any) => {
-            this.logAndPrint('warningInfo', 'time not set, no response from millis server: ' + this.milisLinks.links[this.milisLinks.index]);
-            this.updateFromRTC((err: any) => {
+        }).on('error', (err: Error) => {
+            this.logAndPrint('err','time not set, no response from millis server: ' + this.milisLinks.links[this.milisLinks.index], err);
+            this.updateFromRTC((err: Error|string) => {
                 if (err) {
+                    if (typeof err == 'string'){
+                        this.logAndPrint('fail', `stderr: ${err}`);
+                    } else {
+                        this.logAndPrint('err', `exec error: ${err}`, err);
+                    }
                     this.eventEmitter.emit('timeNotSet', {
                         msg: 'no response from ' + this.milisLinks.links[this.milisLinks.index],
                         code: 1
@@ -514,9 +579,11 @@ export class Ropongi {
     logError(data: string) {
         let path = this.basePath + '/logs',
             fileName = 'omxplayer_errors.log';
-        if (this.configs.logs) this.fs.appendFile(path + '/' + fileName, 'command: ' + data + '\n', (err: string) => {
-            if (err) console.log('info: '.red + '(' + this.getTime() + ') ' + 'failing to write log, ' + err);
-        });
+        if (this.configs.logs) {
+            this.fs.appendFile(path + '/' + fileName, '(' + this.getDate() + ' - ' + this.getTime() + ') ' + 'command: ' + data + '\n', (err: string) => {
+                if (err) console.log('info: '.red + '(' + this.getTime() + ') ' + 'failing to write log, ' + err);
+            });
+        } 
     }
     
     logInput(input: string) {
@@ -527,7 +594,7 @@ export class Ropongi {
         });
     }
     
-    logAndPrint(type: string, output: any) {
+    logAndPrint(type: string, output: any, err:Error|null = null) {
         if (type === 'pass'){
              console.log('pass: '.green + '(' + this.getTime() + ') ' + output);
         } else if (type === 'passInfo') {
@@ -537,24 +604,38 @@ export class Ropongi {
              console.log('info: '.cyan + '(' + this.getTime() + ') ' + output);
         } else if (type === 'warningInfo') {
             console.log('info: '.red + '(' + this.getTime() + ') ' + output);
-            console.trace();
+            if(this.configs.debug){
+                console.trace();
+            }
         } else if (type === 'fail') {
             console.log('fail: '.red + '(' + this.getTime() + ') ' + output);
-            console.trace();
+            this.logError('fail: '+ output);
+            if(this.configs.debug){
+                console.trace();
+            }
         } else if (type === 'err') {
             console.log('err: '.red + '(' + this.getTime() + ') ' + output);
-            console.trace();
+            this.logError('err: '+ output);
+            if(this.configs.debug){
+                console.error(err);
+                console.trace();
+                this.logError(err?.stack ?? '');
+            }
         }
 
         const path = this.basePath + '/logs';
         const fileName = this.getDate() + '.log';
 
-        if (this.configs.logs) this.fs.appendFile(path + '/' + fileName, type + ': (' + this.getTime() + ') ' + output + '\n', (err: string) => {
-            if (err) console.log('info: '.red + '(' + this.getTime() + ') ' + 'failing to write log, ' + err);
-        });
-        
+        if (this.configs.logs) {
+            this.fs.appendFile(path + '/' + fileName, type + ': (' + this.getTime() + ') ' + output + '\n', (err: Error) => {
+               if (err){
+                   console.log('err: '.red + '(' + this.getTime() + ') ' + 'failing to write log, ' + err.message);
+                   console.error(err);
+               } 
+           });
+        }
     }
-    
+
     saveWifiCheck() {
         return !!this.fs.writeFileSync(this.basePath + '/saves/wificheck.json', JSON.stringify(this.wifiCheck));
     }
@@ -643,7 +724,7 @@ export class Ropongi {
         }
         return true;
     }
-    
+
     loadEmail() {
         let tempEmail = this.email;
         if (this.fs.existsSync(this.basePath + '/saves/email.json')) {
@@ -651,7 +732,7 @@ export class Ropongi {
                 this.email = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/email.json'));
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/email.json');
-                this.logAndPrint('fail', 'email.json damaged, and deleted.');
+                this.logAndPrint('err', 'email.json damaged, and deleted.', err);
                 this.email = tempEmail;
                 return false;
             }
@@ -659,7 +740,7 @@ export class Ropongi {
         this.transporter = this.nodemailer.createTransport(this.email);
         return true;
     }
-    
+
     loadConfigs() {
         let tempConfigs = this.configs;
         if (this.fs.existsSync(this.basePath + '/saves/configs.json')) {
@@ -668,14 +749,14 @@ export class Ropongi {
                 this.omxconfig['-o'] = this.configs.output;
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/configs.json');
-                this.logAndPrint('fail', 'configs.json damaged, and deleted.');
+                this.logAndPrint('err', 'email.json damaged, and deleted.', err);
                 this.configs = tempConfigs;
                 return false;
             }
         }
         return true;
     }
-    
+
     loadPassport() {
         let tempConfigs = this.passport;
         if (this.fs.existsSync(this.basePath + '/saves/passport.json')) {
@@ -683,14 +764,14 @@ export class Ropongi {
                 this.passport = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/passport.json'));
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/passport.json');
-                this.logAndPrint('fail', 'passport.json damaged, and deleted.');
+                this.logAndPrint('err', 'passport.json damaged, and deleted.', err);
                 this.passport = tempConfigs;
                 return false;
             }
         }
         return true;
     }
-    
+
     loadWifiCheck() {
         let tempWifiCheck = this.wifiCheck;
         if (this.fs.existsSync(this.basePath + '/saves/wificheck.json')) {
@@ -698,14 +779,14 @@ export class Ropongi {
                 this.wifiCheck = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/wificheck.json'));
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/wificheck.json');
-                this.logAndPrint('fail', 'wificheck.json damaged, and deleted.');
+                this.logAndPrint('err', 'wificheck.json damaged, and deleted.', err);
                 this.wifiCheck = tempWifiCheck;
                 return false;
             }
         }
         return true;
     }
-    
+
     saveLastPlay() {
         if (this.isDaysMode()) {
             this.lastPlay = {
@@ -732,7 +813,7 @@ export class Ropongi {
             this.fs.writeFileSync(this.basePath + '/saves/lastgenresplays.json', JSON.stringify(this.lastGenresPlays));
         }
     }
-    
+
     loadLastPlay() {
         if (this.isDaysMode()) {
             let tempLastPlay = this.lastPlay;
@@ -741,7 +822,7 @@ export class Ropongi {
                     this.lastPlay = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/lastplay.json'));
                 } catch (err) {
                     this.fs.unlinkSync(this.basePath + '/saves/lastplay.json');
-                    this.logAndPrint('fail', 'lastplay.json damaged, and deleted.');
+                    this.logAndPrint('err', 'lastplay.json damaged, and deleted.', err);
                     this.lastPlay = tempLastPlay;
                     return false;
                 }
@@ -758,7 +839,7 @@ export class Ropongi {
                     this.lastGenresPlays = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/lastgenresplays.json'));
                 } catch (err) {
                     this.fs.unlinkSync(this.basePath + '/saves/lastgenresplays.json');
-                    this.logAndPrint('fail', 'lastgenresplays.json damaged, and deleted.');
+                    this.logAndPrint('err', 'lastgenresplays.json damaged, and deleted.', err);
                     this.lastGenresPlays = tempLastGenresPlays;
                     return false;
                 }
@@ -780,7 +861,7 @@ export class Ropongi {
                 return true;
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/lastgenresplays.json');
-                this.logAndPrint('fail', 'lastgenresplays.json damaged, and deleted.');
+                this.logAndPrint('err', 'lastgenresplays.json damaged, and deleted.', err);
                 this.lastGenresPlays = tempLastGenresPlays;
                 return false;
             }
@@ -868,6 +949,13 @@ export class Ropongi {
     setLogs(bool: boolean) {
         this.configs.logs = bool;
         let status = this.configs.logs ? 'on' : 'off';
+        this.logAndPrint('pass', 'logging turned ' + status + '.');
+        this.saveConfigs();
+    }
+    
+    setDebug(bool: boolean) {
+        this.configs.debug = bool;
+        let status = this.configs.debug ? 'on' : 'off';
         this.logAndPrint('pass', 'logging turned ' + status + '.');
         this.saveConfigs();
     }
@@ -981,8 +1069,8 @@ export class Ropongi {
         }
         this.playIfPlayTime().then(() => {
             this.logAndPrint('info', 'starting task play');
-        }, (err: { message: any; }) => {
-            this.logAndPrint('pass', err.message);
+        }, (err: Error) => {
+            this.logAndPrint('err', err.message, err);
         });
     }
     
@@ -1057,8 +1145,8 @@ export class Ropongi {
         } else {
             this.playIfPlayTime().then(() => {
                 this.logAndPrint('pass', 'starting stream.');
-            }, (err: { message: any; }) => {
-                this.logAndPrint('pass', err.message);
+            }, (err: Error) => {
+                this.logAndPrint('err', err.message, err);
             });
         }
     }
@@ -1145,13 +1233,18 @@ export class Ropongi {
                     });
                     this.delGenresPlayList(this.playlist.directory);
                     this.createGenresPlayList(this.playlist.directory, true);
-                    this.exec('sudo killall omxplayer', (err: any, stdout: any, stderr: any) => {
-                        if (!err) {
-                            this.logAndPrint('info', 'all omx players killed ' + new Date());
-                            this.skipPlay([1]); 
-                        } else if (err) {
-                            this.logAndPrint('warningInfo', 'can`t kill all omxplayers');
+                    this.exec('sudo killall omxplayer', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                        if (err) {
+                            this.logAndPrint('err', `can't kill all omxplayers: ${err.message}`, err);
+                            return;
                         }
+                        if(stderr){
+                            this.logAndPrint('fail', `stderr: ${stderr}`)
+                        }
+                        
+                        this.logAndPrint('info', 'all omx players killed ' + new Date());
+                        this.skipPlay([1]); 
+                        
                     });
                     this.playNext();
                 }
@@ -1580,6 +1673,8 @@ export class Ropongi {
         this.logAndPrint('pass', 'auto shutdown after task end ' + autoShutdownInfo);
         let logsInfo = this.configs.logs ? 'ON'.green : 'OFF'.red;
         this.logAndPrint('pass', 'logging logs is ' + logsInfo);
+        let debugMode = this.configs.debug ? 'ON'.green : 'OFF'.red;
+        this.logAndPrint('pass', 'debug mode is ' + debugMode);
         this.logAndPrint('pass', 'tasks type is ' + this.configs.schedulesType);
         if (this.omx.isPlaying() || this.streaming) {
             let playIndex = (this.playlist.currentIndex - 1 + this.playlist.files.length) % this.playlist.files.length;
@@ -1588,12 +1683,25 @@ export class Ropongi {
         } else {
             this.logAndPrint('pass', 'stream is ' + 'OFF'.red);
         }
-        this.exec('vcgencmd measure_temp', (error: any, stdout: { toString: () => string; }, stderr: any) => {
+        this.exec('vcgencmd measure_temp', (error: Error, stdout: { toString: () => string; }, stderr: string|Buffer) => {
+            if (error) {
+                this.logAndPrint('err', `Exec error: ${error.message}`, error);
+            }
+            if(stderr){
+                this.logAndPrint('fail', `stderr: ${stderr}`)
+            }
+
             if (stdout) {
                 this.logAndPrint('pass', 'temp: ' + stdout.toString().replace(/\s+/g, " ").trim().split('=')[1]);
             }
         });
-        this.exec('df / -h', (error: any, stdout: { toString: () => string; }, stderr: any) => {
+        this.exec('df / -h', (error: any, stdout: { toString: () => string; }, stderr: string|Buffer) => {
+            if (error) {
+                this.logAndPrint('err', `Exec error: ${error.message}`, error);
+            }
+            if(stderr){
+                this.logAndPrint('fail', `stderr: ${stderr}`)
+            }
             if (stdout) {
                 let arr = stdout.toString().replace(/\s+/g, " ").trim().split(' ').slice(8);
                 this.logAndPrint('pass', 'SD size: ' + arr[0] + ' used: ' + arr[1] + ' / ' + arr[3] + ' available: ' + arr[2]);
@@ -1676,7 +1784,11 @@ export class Ropongi {
             this.configs.schedulesType = type;
             this.logAndPrint('pass', 'schedules type set to ' + this.configs.schedulesType + '.');
             this.saveConfigs();
-            this.playIfPlayTime();
+            this.playIfPlayTime().then(() => {
+                this.logAndPrint('pass', 'starting stream.');
+            }, (err: Error) => {
+                this.logAndPrint('err', err.message, err);
+            });
         });
     }
     
@@ -1768,7 +1880,7 @@ export class Ropongi {
                 this.schedulesGenresSpliters = obj.spliters;
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/tasksgenres.json');
-                this.logAndPrint('fail', 'tasksgenres.json damaged, and deleted.');
+                this.logAndPrint('err', 'tasksgenres.json damaged, and deleted.', err);
                 return false;
             }
         }
@@ -1942,9 +2054,14 @@ export class Ropongi {
     shutdownIfSet() {
         if (this.configs.autoShutdown) {
             this.logAndPrint('info', 'shuting down...');
-            this.exec('shutdown -h now', (error: string, stdout: any, stderr: string) => {
-                if (stderr) this.logAndPrint('warningInfo', 'stderr from auto shutdown: ' + stderr);
-                if (error) this.logAndPrint('warningInfo', 'error from auto shutdown: ' + error);
+            this.exec('shutdown -h now', (error: Error, stdout: string|Buffer, stderr: string) => {
+                if (error) {
+                    this.logAndPrint('err', `Exec error from auto shutdown:: ${error.message}`, error);
+                    return;
+                }
+                if(stderr){
+                    this.logAndPrint('fail', `stderr from auto shutdown:: ${stderr}`)
+                }
             });
         }
     }
@@ -1987,28 +2104,17 @@ export class Ropongi {
     but after the api of time was shuted down we moved the trigger after the init steps.
     */
     public async mainStart() {
-        console.log('mainStart() initiated.')
         this.makeMaindirs();
-        console.log('Done: this.makeMaindirs() at mainStart().');
         this.makeDaydirs();
-        console.log('Done: this.makeDaydirs() at mainStart().');
         this.chmodRAll();
-        console.log('Done: this.chmodRAll() at mainStart().');
         this.loadConfigs();
-        console.log('Done: this.loadConfigs() at mainStart().');
         this.loadPassport();
-        console.log('Done: this.loadPassport() at mainStart().');
         this.loadEmail();
-        console.log('Done: this.loadEmail() at mainStart().');
         this.loadWifiCheck();
-        console.log('Done: this.loadWifiCheck() at mainStart().');
         this.loadGenres();
-        console.log('Done: this.loadGenres() at mainStart().');
         this.initialize();
-        console.log('Done: this.initialize() at mainStart().');
         if (this.wifiCheck.status){
             this.checkWifi();
-            console.log('Done: this.checkWifi() at mainStart().');
         } 
         this.eventEmitter.on('timeSet', this.chmodRAll);
         this.eventEmitter.on('timeNotSet', (err: { code: number; }) =>  {
@@ -2028,9 +2134,7 @@ export class Ropongi {
                 this.milisLinks.fullCircle = false;
             }
         });
-        console.log('Done: this.eventEmitter set at mainStart().');
         this.enableRTC().then(this.setTime, this.setTime);
-        console.log('Done: this.enableRTC() at mainStart().');
     }
     
     initialize() {
