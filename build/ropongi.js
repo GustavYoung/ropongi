@@ -300,6 +300,19 @@ class Ropongi {
                                 }
                                 break;
                             }
+                        case 'debug':
+                            {
+                                let field = line.trim().split(' ')[2];
+                                switch (field) {
+                                    case 'on':
+                                        this.setDebug(true);
+                                        break;
+                                    case 'off':
+                                        this.setDebug(false);
+                                        break;
+                                }
+                                break;
+                            }
                         case 'taskstype':
                             {
                                 let field = line.trim().split(' ')[2];
@@ -985,7 +998,7 @@ class Ropongi {
     setDebug(bool) {
         this.configs.debug = bool;
         let status = this.configs.debug ? 'on' : 'off';
-        this.logAndPrint('pass', 'logging turned ' + status + '.');
+        this.logAndPrint('pass', 'debug logging turned ' + status + '.');
         this.saveConfigs();
     }
     printHelp() {
@@ -1006,7 +1019,8 @@ class Ropongi {
         this.logAndPrint('pass', '| set output TYPE | TYPE == ' + this.outputTypes);
         this.logAndPrint('pass', '| set wificheck STATUS MINUTES | MINUTES == 1,2, etc.. (default 10min)');
         this.logAndPrint('pass', '| set email EMAIL PASS');
-        this.logAndPrint('pass', '| set logs STATUS');
+        this.logAndPrint('pass', '| set logs STATUS (on, off)');
+        this.logAndPrint('pass', '| set debug STATUS(on, off)');
         this.logAndPrint('pass', '| set autoshutdown STATUS');
         this.logAndPrint('pass', '| set time MILLIS | get from http://currentmillis.com/ OR js: new Date().valueOf()');
         this.logAndPrint('pass', '| add genres GENRES');
