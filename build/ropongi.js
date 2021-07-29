@@ -42,7 +42,6 @@ class Ropongi {
         this.mailOptions = { from: this.passport.name, to: 'ropongi@ideasign.mx', subject: 'ropongiStream ' + this.passport.name, text: 'no messege' };
         this.playlist = { files: [], currentIndex: 0, path: '', directory: '' };
         this.q = require('q');
-        this.regularExpressionTime = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
         this.rl = require('readline').createInterface(process.stdin, process.stdout);
         this.rtc = true;
         this.schedule = require('node-schedule');
@@ -56,7 +55,6 @@ class Ropongi {
         this.schedulesType = ['days', 'genres'];
         this.sharedday = this.basePath + '/uploads/sharedday';
         this.streaming = false;
-        this.today = { name: null, index: null, dir: null };
         this.transporter = this.nodemailer.createTransport(this.email);
         this.util = require('util');
         this.version = '0.7.1';
@@ -66,8 +64,9 @@ class Ropongi {
         this.omx.enableHangingHandler();
         this.omx.on('play', (path) => {
             let pathArray = path.split('/');
-            if (!pathArray.length)
+            if (!pathArray.length) {
                 return;
+            }
             // Test por string
             let file = pathArray.pop();
             this.logAndPrint('info', 'playing index: ' + (this.playlist.files.indexOf(file) + 1)
@@ -218,12 +217,11 @@ class Ropongi {
                         case 'task':
                             {
                                 let arr = line.trim().split(' ').slice(2);
-                                if (arr.length === 3)
-                                    this.addSchedule(arr[0], arr[1], arr[2]);
-                                else if (arr.length === 4)
-                                    this.addSchedule(arr[0], arr[1], arr[2], arr[3]);
-                                else
+                                if (arr.length < 3 || arr.length > 4) {
                                     this.logAndPrint('fail', 'input must be 3 or 4 parameters.'.bold);
+                                    break;
+                                }
+                                this.addSchedule(...arr);
                                 break;
                             }
                         case 'taskgenres':
@@ -259,7 +257,7 @@ class Ropongi {
                             }
                         case 'wificheck':
                             {
-                                let field = line.trim().split(' ')[2], data = line.trim().split(' ').slice(3).join(' ');
+                                let field = line.trim().split(' ')[2], data = parseInt(line.trim().split(' ').slice(3).join(' '));
                                 switch (field) {
                                     case 'on':
                                         this.setWifiCheck(true, data);
@@ -376,7 +374,7 @@ class Ropongi {
             }
         });
     }
-    updateToRTC(cb = null) {
+    updateToRTC(cb) {
         if (this.rtc) {
             this.exec('sudo hwclock -w', (err, stdout, stderr) => {
                 if (stderr) {
@@ -395,9 +393,7 @@ class Ropongi {
         }
         else {
             if (cb)
-                cb({
-                    err: 'no RTC available'
-                });
+                cb('no RTC available');
         }
     }
     updateFromRTC(cb) {
@@ -422,7 +418,7 @@ class Ropongi {
                 cb('no RTC available');
         }
     }
-    enableRTC(cb) {
+    enableRTC() {
         let deferred = this.q.defer();
         this.exec('sudo echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device', (err, stdout, stderr) => {
             if (stderr) {
@@ -466,7 +462,16 @@ class Ropongi {
                 }
                 if (stdout) {
                     this.logAndPrint('info', 'time set to: ' + new Date());
-                    this.updateToRTC();
+                    this.updateToRTC((err) => {
+                        if (err) {
+                            if (typeof err == 'string') {
+                                this.logAndPrint('fail', `stderr: ${err}`);
+                            }
+                            else {
+                                this.logAndPrint('err', `exec error: ${err}`, err);
+                            }
+                        }
+                    });
                     this.eventEmitter.emit('timeSet');
                     this.resetMilisLinks();
                 }
@@ -498,7 +503,16 @@ class Ropongi {
                         }
                         if (stdout) {
                             this.logAndPrint('info', 'time set to: ' + new Date());
-                            this.updateToRTC();
+                            this.updateToRTC((err) => {
+                                if (err) {
+                                    if (typeof err == 'string') {
+                                        this.logAndPrint('fail', `stderr: ${err}`);
+                                    }
+                                    else {
+                                        this.logAndPrint('err', `exec error: ${err}`, err);
+                                    }
+                                }
+                            });
                             this.eventEmitter.emit('timeSet');
                             this.resetMilisLinks();
                         }
@@ -567,7 +581,16 @@ class Ropongi {
                         }
                         if (stdout) {
                             this.logAndPrint('info', 'time set to: ' + new Date());
-                            this.updateToRTC();
+                            this.updateToRTC((err) => {
+                                if (err) {
+                                    if (typeof err == 'string') {
+                                        this.logAndPrint('fail', `stderr: ${err}`);
+                                    }
+                                    else {
+                                        this.logAndPrint('err', `exec error: ${err}`, err);
+                                    }
+                                }
+                            });
                             this.eventEmitter.emit('timeSet');
                             this.resetMilisLinks();
                         }
@@ -918,13 +941,13 @@ class Ropongi {
     saveLastGenresPlays() {
         return !!this.fs.writeFileSync(this.basePath + '/saves/lastgenresplays.json', JSON.stringify(this.lastGenresPlays));
     }
-    setWifiCheck(status, minutes) {
+    setWifiCheck(status, minutes = 0) {
         if (this.wifiCheckIntervalObject)
             clearInterval(this.wifiCheckIntervalObject);
         if (status === true) {
             const that = this;
             this.wifiCheck.status = true;
-            if (minutes && minutes > 0)
+            if (minutes > 0)
                 this.wifiCheck.minutes = minutes;
             else
                 this.wifiCheck.minutes = 30;
@@ -1170,13 +1193,14 @@ class Ropongi {
         }
         return deferred.promise;
     }
-    skipPlay(num) {
-        if (parseInt(num) && this.playlist.files.length && (parseInt(num) < 0 || parseInt(num) >= this.playlist.files.length)) {
+    skipPlay(val) {
+        const num = parseInt(val.toString());
+        if (num && this.playlist.files.length && (num < 0 || num >= this.playlist.files.length)) {
             this.logAndPrint('fail', 'skip between 0 to ' + (this.playlist.files.length - 1));
             return;
         }
-        else if (parseInt(num) && this.playlist.files.length) {
-            this.playlist.currentIndex = (parseInt(num) - 1 + this.playlist.files.length) % this.playlist.files.length;
+        else if (num && this.playlist.files.length) {
+            this.playlist.currentIndex = (num - 1 + this.playlist.files.length) % this.playlist.files.length;
         }
         if (this.omx.isPlaying()) {
             this.omx.stop();
@@ -1273,7 +1297,7 @@ class Ropongi {
                             this.logAndPrint('fail', `stderr: ${stderr}`);
                         }
                         this.logAndPrint('info', 'all omx players killed ' + new Date());
-                        this.skipPlay([1]);
+                        this.skipPlay(1);
                     });
                     this.playNext();
                 }
@@ -1286,7 +1310,7 @@ class Ropongi {
         }
     }
     getPlayingStartDay() {
-        let sStartDay, sStopDay, sStartDayIndex, sStopDayIndex, sStartHour, sStartMinute, sStopHour, sStopMinute, day = this.weekday[new Date().getDay()], dayIndex = this.weekday.indexOf(day), hour = parseInt(new Date().getHours()), minute = parseInt(new Date().getMinutes());
+        let sStartDay, sStopDay, sStartDayIndex, sStopDayIndex, sStartHour, sStartMinute, sStopHour, sStopMinute, day = this.weekday[new Date().getDay()], dayIndex = this.weekday.indexOf(day), hour = new Date().getHours(), minute = new Date().getMinutes();
         for (let j = 0; j < this.schedules.length; j++) {
             if (this.schedules[j]) {
                 if (this.schedules[j].startDay && this.schedules[j].startTime && this.schedules[j].startDay && this.schedules[j].startTime) {
@@ -1312,10 +1336,9 @@ class Ropongi {
         }
         return null;
     }
-    getPreviousDayIndex() {
-        if (arguments.length === 1 && this._l.isNumber(arguments[0]) && arguments[0] >= 0 && arguments[0] <= 6) {
-            let dayIndex = arguments[0];
-            return dayIndex > 0 ? dayIndex - 1 : 6;
+    getPreviousDayIndex(index) {
+        if (index >= 0 && index <= 6) {
+            return index > 0 ? index - 1 : 6;
         }
         return -1;
     }
@@ -1404,8 +1427,10 @@ class Ropongi {
         return true;
     }
     isRealTime(time) {
-        if (!time || !this._l.isString(time) || !this.regularExpressionTime.test(time[0] === 'n' ? time.splice(0, 1) : time))
+        const regularExpressionTime = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!time || !regularExpressionTime.test(time.startsWith('n') ? time.substring(1) : time)) {
             return false;
+        }
         return true;
     }
     delPlayListSwitch(arrDayGenre) {
@@ -1447,13 +1472,13 @@ class Ropongi {
             if (arrDayGenre[1] === 'days')
                 this.createPlayList(arrDayGenre[0], random, shared);
             else if (arrDayGenre[1] === 'genres')
-                this.createGenresPlayList(arrDayGenre[0], random, shared);
+                this.createGenresPlayList(arrDayGenre[0], random);
         }
         else if (arrDayGenre.length === 1 && !this.isAllString(arrDayGenre[0])) {
             if (this.isRealDayName(arrDayGenre[0]))
                 this.createPlayList(arrDayGenre[0], random, shared);
             else if (this.isRealGenre(arrDayGenre[0]))
-                this.createGenresPlayList(arrDayGenre[0], random, shared);
+                this.createGenresPlayList(arrDayGenre[0], random);
         }
     }
     createPlayList(day, random, shared) {
@@ -1519,13 +1544,14 @@ class Ropongi {
         return retArr;
     }
     updateDay() {
-        let name = this.weekday[new Date().getDay()];
-        this.today = {
+        const name = this.weekday[new Date().getDay()];
+        const today = {
             name: name,
             index: this.weekday.indexOf(name),
             dir: this.basePath + '/uploads/' + name
         };
-        return this.today;
+        this.today = today;
+        return today;
     }
     isEmptyScheduleTime(scheduleObject) {
         let prevIndex = (scheduleObject.startDayIndex - 1 + 7) % 7, nextIndex = (scheduleObject.startDayIndex + 1 + 7) % 7, t1, t2;
@@ -1611,32 +1637,32 @@ class Ropongi {
             return true;
         return false;
     }
-    addSchedule() {
+    addSchedule(...args) {
         let startDay, startDayIndex, endDayIndex, startTime, endDay, endTime, scheduleObject;
-        if (!(arguments.length >= 3 && arguments.length <= 4)) {
+        if (!(args.length >= 3 && args.length <= 4)) {
             this.logAndPrint('fail', 'input must be 3 or 4 parameters.'.bold);
             return false;
         }
-        if (this.isRealDayName(arguments[0])) {
-            startDay = arguments[0];
+        if (this.isRealDayName(args[0])) {
+            startDay = args[0];
             startDayIndex = this.weekday.indexOf(startDay);
         }
         else {
             this.logAndPrint('fail', 'start day is misspelled'.bold);
             return false;
         }
-        if (this.isRealTime(arguments[1])) {
-            startTime = arguments[1];
+        if (this.isRealTime(args[1])) {
+            startTime = args[1];
         }
         else {
             this.logAndPrint('fail', 'start time is misspelled, use HH:MM'.bold);
             return false;
         }
-        if (arguments.length === 3) {
-            endDayIndex = startDayIndex;
-            endDay = startDay;
-            if (this.isRealTime(arguments[2])) {
-                endTime = arguments[2];
+        endDayIndex = startDayIndex;
+        endDay = startDay;
+        if (args.length === 3) {
+            if (this.isRealTime(args[2])) {
+                endTime = args[2];
             }
             else {
                 this.logAndPrint('fail', 'end time is misspelled, use HH:MM'.bold);
@@ -1647,17 +1673,17 @@ class Ropongi {
                 return false;
             }
         }
-        else if (arguments.length === 4) {
-            if (this.isRealDayName(arguments[2])) {
-                endDay = arguments[2];
+        else if (args.length === 4) {
+            if (this.isRealDayName(args[2])) {
+                endDay = args[2];
                 endDayIndex = this.weekday.indexOf(endDay);
             }
             else {
                 this.logAndPrint('fail', 'end day is misspelled'.bold);
                 return false;
             }
-            if (this.isRealTime(arguments[3])) {
-                endTime = arguments[3];
+            if (this.isRealTime(args[3])) {
+                endTime = args[3];
             }
             else {
                 this.logAndPrint('fail', 'end time is misspelled, use HH:MM'.bold);
@@ -1701,12 +1727,13 @@ class Ropongi {
             + Math.floor(((seconds % 86400) % 3600) % 60) + ' seconds';
     }
     currentStatus() {
+        var _a;
         this.updateDay();
         this.logAndPrint('pass', 'Ropongi_Stream v' + this.version + ' ' + this.passport.name + ' current status:');
         this.logAndPrint('pass', 'email ' + this.email.auth.user);
         this.logAndPrint('pass', 'output ' + this.configs.output);
         this.logAndPrint('pass', 'location ' + this.passport.place + ' at ' + this.passport.address);
-        this.logAndPrint('pass', 'current time: ' + this.today.name + ' ' + this.getTime());
+        this.logAndPrint('pass', 'current time: ' + ((_a = this.today) === null || _a === void 0 ? void 0 : _a.name) + ' ' + this.getTime());
         this.logAndPrint('pass', 'uptime: ' + this.getUptime());
         this.logAndPrint('pass', 'local ip: ' + this.ip.address() + ' network ip: ' + this.networkInfo.networkIp);
         let wifiInfo = this.wifiCheck.status ? 'ON'.green + ' , interval: ' + this.wifiCheck.minutes + ' minutes' : 'OFF'.red;
@@ -1787,11 +1814,12 @@ class Ropongi {
         return false;
     }
     delGenrePlaylist(genre) {
-        for (let i in this.lastGenresPlays)
+        for (let i = 0; i < this.lastGenresPlays.length; i++) {
             if (this.lastGenresPlays[i].directory === genre) {
                 this.lastGenresPlays.splice(i, 1);
                 return true;
             }
+        }
         return false;
     }
     printGenres() {
@@ -1935,16 +1963,17 @@ class Ropongi {
         if (!this.validateGenresAndTimes(genresAndTimesArr))
             return false;
         let times = [];
-        for (let i in genresAndTimesArr) {
-            if (i % 2)
+        for (let i = 0; i < genresAndTimesArr.length; i++) {
+            if (i % 2) {
                 times.push(genresAndTimesArr[i]);
+            }
         }
         if (genresAndTimesArr.length > 2 && !this.validateSceduleTimes(day, times))
             return false;
         let dayIndex = this.weekday.indexOf(day);
         this.schedulesGenres[dayIndex] = [];
         this.schedulesGenresSpliters[dayIndex] = [];
-        for (let i in genresAndTimesArr) {
+        for (let i = 0; i < genresAndTimesArr.length; i++) {
             if (!(i % 2)) {
                 this.schedulesGenres[dayIndex].push(genresAndTimesArr[i]);
             }
@@ -1989,7 +2018,7 @@ class Ropongi {
             this.logAndPrint('fail', 'use GENRE TIME GENRE TIME GENRE etc.. or GENRE. (TIME is only for split between GENRES)');
             return false;
         }
-        for (let i in genresAndTimesArr) {
+        for (let i = 0; i < genresAndTimesArr.length; i++) {
             if (!(i % 2)) {
                 if (!this.isRealGenre(genresAndTimesArr[i])) {
                     this.logAndPrint('fail', genresAndTimesArr[i] + ' is not correct genre. use: genres');
@@ -2008,9 +2037,9 @@ class Ropongi {
         return h + ':' + m;
     }
     make24Hours(time) {
-        let h = parseInt(time.split(':')[0]) >= 24 ? parseInt(time.split(':')[0]) - 24 : parseInt(time.split(':')[0]), m = (parseInt(time.split(':')[1]) < 10) ? '0' + parseInt(time.split(':')[1]) : parseInt(time.split(':')[1]);
-        h = h < 10 ? '0' + h : h;
-        return h + ':' + m;
+        const h = parseInt(time.split(':')[0]) >= 24 ? parseInt(time.split(':')[0]) - 24 : parseInt(time.split(':')[0]), m = (parseInt(time.split(':')[1]) < 10) ? '0' + parseInt(time.split(':')[1]) : parseInt(time.split(':')[1]);
+        const _h = h < 10 ? '0' + h : h.toString();
+        return _h + ':' + m;
     }
     is48Hours(time) {
         return parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]) >= 1440;

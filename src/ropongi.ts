@@ -1,6 +1,7 @@
 // @ts-ignore
 
 import 'colors';
+import { Day } from './interfaces';
 
 export class Ropongi {
     _l = require('lodash');
@@ -31,7 +32,6 @@ export class Ropongi {
     mailOptions = { from: this.passport.name, to: 'ropongi@ideasign.mx', subject: 'ropongiStream ' + this.passport.name, text: 'no messege' };
     playlist = { files:[] as string[] , currentIndex: 0, path: '', directory: '' };
     q = require('q');
-    regularExpressionTime = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
     rl = require('readline').createInterface(process.stdin, process.stdout);
     rtc = true;
     schedule = require('node-schedule');
@@ -46,7 +46,7 @@ export class Ropongi {
     setTimeTimeout: any;
     sharedday = this.basePath + '/uploads/sharedday';
     streaming = false;
-    today = { name: null, index: null, dir: null };
+    today: Day | undefined;
     transporter = this.nodemailer.createTransport(this.email);
     util = require('util');
     version = '0.7.1';
@@ -61,7 +61,9 @@ export class Ropongi {
         this.omx.enableHangingHandler();
         this.omx.on('play', (path: string) => {
             let pathArray = path.split('/');
-            if (!pathArray.length) return;
+            if (!pathArray.length){
+                return;
+            } 
             
             // Test por string
             let file = pathArray.pop() as string;
@@ -201,9 +203,11 @@ export class Ropongi {
                         case 'task':
                             {
                                 let arr = line.trim().split(' ').slice(2);
-                                if (arr.length === 3) this.addSchedule(arr[0], arr[1], arr[2]);
-                                else if (arr.length === 4) this.addSchedule(arr[0], arr[1], arr[2], arr[3]);
-                                else this.logAndPrint('fail', 'input must be 3 or 4 parameters.'.bold);
+                                if(arr.length < 3 || arr.length > 4 ){
+                                    this.logAndPrint('fail', 'input must be 3 or 4 parameters.'.bold);
+                                    break;
+                                }
+                                this.addSchedule(...arr);
                                 break;
                             }
                         case 'taskgenres':
@@ -239,7 +243,7 @@ export class Ropongi {
                                 }
                         case 'wificheck':
                            { let field = line.trim().split(' ')[2],
-                                data = line.trim().split(' ').slice(3).join(' ');
+                                data =  parseInt(line.trim().split(' ').slice(3).join(' '));
                             switch (field) {
                                 case 'on':
                                     this.setWifiCheck(true, data);
@@ -355,7 +359,7 @@ export class Ropongi {
         });
     }
 
-    updateToRTC(cb = null) {
+    updateToRTC(cb: (err: Error|string) => void) {
         if (this.rtc) {
             this.exec('sudo hwclock -w', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                 if(stderr){
@@ -367,14 +371,12 @@ export class Ropongi {
                     this.logAndPrint('info', 'RTC updated from system clock: ' + new Date());
                 }
 
-                if (cb) {
+                if(cb) {
                     cb(err);
                 } 
             });
         } else {
-            if (cb) cb({
-                err: 'no RTC available'
-            });
+            if (cb) cb('no RTC available');
         }
     }
 
@@ -399,7 +401,7 @@ export class Ropongi {
         }
     }
 
-    enableRTC(cb: undefined) {
+    enableRTC() {
         let deferred = this.q.defer();
         this.exec('sudo echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device', (err: NodeJS.ErrnoException, stdout: string|Buffer, stderr: string|Buffer) => {
             if(stderr){
@@ -444,7 +446,15 @@ export class Ropongi {
                 }
                 if (stdout) {
                     this.logAndPrint('info', 'time set to: ' + new Date());
-                    this.updateToRTC();
+                    this.updateToRTC((err: Error|string) => {
+                        if (err) {
+                            if (typeof err == 'string'){
+                                this.logAndPrint('fail', `stderr: ${err}`);
+                            } else {
+                                this.logAndPrint('err', `exec error: ${err}`, err);
+                            }
+                        } 
+                    });
                     this.eventEmitter.emit('timeSet');
                     this.resetMilisLinks();
                 }
@@ -477,7 +487,15 @@ export class Ropongi {
                         }
                         if (stdout) {
                             this.logAndPrint('info', 'time set to: ' + new Date());
-                            this.updateToRTC();
+                            this.updateToRTC((err: Error|string) => {
+                                if (err) {
+                                    if (typeof err == 'string'){
+                                        this.logAndPrint('fail', `stderr: ${err}`);
+                                    } else {
+                                        this.logAndPrint('err', `exec error: ${err}`, err);
+                                    }
+                                } 
+                            });
                             this.eventEmitter.emit('timeSet');
                             this.resetMilisLinks();
                         }
@@ -542,7 +560,15 @@ export class Ropongi {
                         }
                         if (stdout) {
                             this.logAndPrint('info', 'time set to: ' + new Date());
-                            this.updateToRTC();
+                            this.updateToRTC((err: Error|string) => {
+                        if (err) {
+                            if (typeof err == 'string'){
+                                this.logAndPrint('fail', `stderr: ${err}`);
+                            } else {
+                                this.logAndPrint('err', `exec error: ${err}`, err);
+                            }
+                        } 
+                    });
                             this.eventEmitter.emit('timeSet');
                             this.resetMilisLinks();
                         }
@@ -884,12 +910,12 @@ export class Ropongi {
         return !!this.fs.writeFileSync(this.basePath + '/saves/lastgenresplays.json', JSON.stringify(this.lastGenresPlays));
     }
     
-    setWifiCheck(status: boolean, minutes: number) {
+    setWifiCheck(status: boolean, minutes: number = 0) {
         if (this.wifiCheckIntervalObject) clearInterval(this.wifiCheckIntervalObject);
         if (status === true) {
             const that = this;
             this.wifiCheck.status = true;
-            if (minutes && minutes > 0) this.wifiCheck.minutes = minutes;
+            if (minutes > 0) this.wifiCheck.minutes = minutes;
             else this.wifiCheck.minutes = 30;
             this.wifiCheckIntervalObject = setInterval(()  => {
                 that.checkWifi();
@@ -1087,7 +1113,7 @@ export class Ropongi {
         });
     }
     
-    startPlay(day = null as string | null) {
+    startPlay(day: string | null = null) {
         let deferred = this.q.defer();
         if (this.omx.isPlaying() || this.streaming) {
             deferred.reject(new Error('allready streaming'));
@@ -1146,12 +1172,13 @@ export class Ropongi {
         return deferred.promise;
     }
     
-    skipPlay(num: string | number[]) {
-        if (parseInt(num) && this.playlist.files.length && (parseInt(num) < 0 || parseInt(num) >= this.playlist.files.length)) {
+    skipPlay(val: string | number) {
+        const num = parseInt(val.toString());
+        if (num && this.playlist.files.length && (num < 0 || num >= this.playlist.files.length)) {
             this.logAndPrint('fail', 'skip between 0 to ' + (this.playlist.files.length - 1));
             return;
-        } else if (parseInt(num) && this.playlist.files.length) {
-            this.playlist.currentIndex = (parseInt(num) - 1 + this.playlist.files.length) % this.playlist.files.length;
+        } else if (num && this.playlist.files.length) {
+            this.playlist.currentIndex = (num - 1 + this.playlist.files.length) % this.playlist.files.length;
         }
         if (this.omx.isPlaying()) {
             this.omx.stop();
@@ -1256,7 +1283,7 @@ export class Ropongi {
                         }
                         
                         this.logAndPrint('info', 'all omx players killed ' + new Date());
-                        this.skipPlay([1]); 
+                        this.skipPlay(1); 
                         
                     });
                     this.playNext();
@@ -1274,8 +1301,8 @@ export class Ropongi {
         let sStartDay, sStopDay, sStartDayIndex, sStopDayIndex, sStartHour, sStartMinute, sStopHour, sStopMinute,
             day = this.weekday[new Date().getDay()],
             dayIndex = this.weekday.indexOf(day),
-            hour = parseInt(new Date().getHours()),
-            minute = parseInt(new Date().getMinutes());
+            hour = new Date().getHours(),
+            minute = new Date().getMinutes();
         for (let j = 0; j < this.schedules.length; j++) {
             if (this.schedules[j]) {
                 if (this.schedules[j].startDay && this.schedules[j].startTime && this.schedules[j].startDay && this.schedules[j].startTime) {
@@ -1299,10 +1326,9 @@ export class Ropongi {
         return null;
     }
     
-    getPreviousDayIndex() {
-        if (arguments.length === 1 && this._l.isNumber(arguments[0]) && arguments[0] >= 0 && arguments[0] <= 6) {
-            let dayIndex = arguments[0];
-            return dayIndex > 0 ? dayIndex - 1 : 6;
+    getPreviousDayIndex(index:number) {
+        if (index >= 0 && index <= 6) {
+            return index > 0 ? index - 1 : 6;
         }
         return -1;
     }
@@ -1341,7 +1367,7 @@ export class Ropongi {
         }
     }
     
-    loadPlayList(day: string | null) {
+    loadPlayList(day: string) {
         if (!this.isRealDayName(day)) {
             return false;
         }
@@ -1379,7 +1405,7 @@ export class Ropongi {
         if (!toCheck || !this._l.isString(toCheck) || this.weekday.indexOf(toCheck.toLowerCase()) === -1) return false;
         return true;
     }
-    
+
     isPlayableFile(toCheck: string) {
         if (!toCheck) {
             return false;
@@ -1388,17 +1414,21 @@ export class Ropongi {
             type = arr.pop();
         return (this._l.indexOf(this.filetypes, type) !== -1);
     }
-    
+
     isAllString(toCheck: string) {
         if (!toCheck || !this._l.isString(toCheck) || toCheck.toLowerCase() != 'all') return false;
         return true;
     }
-    
-    isRealTime(time: string | string[]) {
-        if (!time || !this._l.isString(time) || !this.regularExpressionTime.test(time[0] === 'n' ? time.splice(0, 1) : time)) return false;
+
+    isRealTime(time: string) {
+        const regularExpressionTime = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!time || !regularExpressionTime.test(time.startsWith('n') ? time.substring(1) : time))
+        {
+            return false;
+        }
         return true;
     }
-    
+
     delPlayListSwitch(arrDayGenre: string | any[]) {
         if (arrDayGenre.length === 2 && this.isAllString(arrDayGenre[0])) {
             if (arrDayGenre[1] === 'days') this.delPlayList(arrDayGenre[0]);
@@ -1428,10 +1458,10 @@ export class Ropongi {
     createPlayListSwitch(arrDayGenre: string | any[], random: boolean, shared: boolean) {
         if (arrDayGenre.length === 2 && this.isAllString(arrDayGenre[0])) {
             if (arrDayGenre[1] === 'days') this.createPlayList(arrDayGenre[0], random, shared);
-            else if (arrDayGenre[1] === 'genres') this.createGenresPlayList(arrDayGenre[0], random, shared);
+            else if (arrDayGenre[1] === 'genres') this.createGenresPlayList(arrDayGenre[0], random);
         } else if (arrDayGenre.length === 1 && !this.isAllString(arrDayGenre[0])) {
             if (this.isRealDayName(arrDayGenre[0])) this.createPlayList(arrDayGenre[0], random, shared);
-            else if (this.isRealGenre(arrDayGenre[0])) this.createGenresPlayList(arrDayGenre[0], random, shared);
+            else if (this.isRealGenre(arrDayGenre[0])) this.createGenresPlayList(arrDayGenre[0], random);
         }
     }
     
@@ -1497,13 +1527,14 @@ export class Ropongi {
     }
     
     updateDay() {
-        let name = this.weekday[new Date().getDay()];
-        this.today = {
+        const name = this.weekday[new Date().getDay()];
+        const today = {
             name: name,
             index: this.weekday.indexOf(name),
             dir: this.basePath + '/uploads/' + name
         };
-        return this.today;
+        this.today = today;
+        return today;
     }
     
     isEmptyScheduleTime(scheduleObject: { startDay?: any; startDayIndex: any; startTime: any; endDay?: any; endDayIndex: any; endTime: any; }) {
@@ -1586,30 +1617,31 @@ export class Ropongi {
         return false;
     }
     
-    addSchedule() {
+    addSchedule(...args: string[]) {
         let startDay, startDayIndex, endDayIndex, startTime, endDay, endTime, scheduleObject;
-        if (!(arguments.length >= 3 && arguments.length <= 4)) {
+        if (!(args.length >= 3 && args.length <= 4)) {
             this.logAndPrint('fail', 'input must be 3 or 4 parameters.'.bold);
             return false;
         }
-        if (this.isRealDayName(arguments[0])) {
-            startDay = arguments[0];
+        if (this.isRealDayName(args[0])) {
+            startDay = args[0];
             startDayIndex = this.weekday.indexOf(startDay)
         } else {
             this.logAndPrint('fail', 'start day is misspelled'.bold);
             return false;
         }
-        if (this.isRealTime(arguments[1])) {
-            startTime = arguments[1];
+        if (this.isRealTime(args[1])) {
+            startTime = args[1];
         } else {
             this.logAndPrint('fail', 'start time is misspelled, use HH:MM'.bold);
             return false;
         }
-        if (arguments.length === 3) {
-            endDayIndex = startDayIndex;
-            endDay = startDay;
-            if (this.isRealTime(arguments[2])) {
-                endTime = arguments[2];
+
+        endDayIndex = startDayIndex;
+        endDay = startDay;
+        if (args.length === 3) {
+            if (this.isRealTime(args[2])) {
+                endTime = args[2];
             } else {
                 this.logAndPrint('fail', 'end time is misspelled, use HH:MM'.bold);
                 return false;
@@ -1618,16 +1650,16 @@ export class Ropongi {
                 this.logAndPrint('fail', 'end time is lower than start time.'.bold);
                 return false;
             }
-        } else if (arguments.length === 4) {
-            if (this.isRealDayName(arguments[2])) {
-                endDay = arguments[2];
+        } else if (args.length === 4) {
+            if (this.isRealDayName(args[2])) {
+                endDay = args[2];
                 endDayIndex = this.weekday.indexOf(endDay)
             } else {
                 this.logAndPrint('fail', 'end day is misspelled'.bold);
                 return false;
             }
-            if (this.isRealTime(arguments[3])) {
-                endTime = arguments[3];
+            if (this.isRealTime(args[3])) {
+                endTime = args[3];
             } else {
                 this.logAndPrint('fail', 'end time is misspelled, use HH:MM'.bold);
                 return false;
@@ -1675,7 +1707,7 @@ export class Ropongi {
         this.logAndPrint('pass', 'email ' + this.email.auth.user);
         this.logAndPrint('pass', 'output ' + this.configs.output);
         this.logAndPrint('pass', 'location ' + this.passport.place + ' at ' + this.passport.address);
-        this.logAndPrint('pass', 'current time: ' + this.today.name + ' ' + this.getTime());
+        this.logAndPrint('pass', 'current time: ' + this.today?.name + ' ' + this.getTime());
         this.logAndPrint('pass', 'uptime: ' + this.getUptime());
         this.logAndPrint('pass', 'local ip: ' + this.ip.address() + ' network ip: ' + this.networkInfo.networkIp);
         let wifiInfo = this.wifiCheck.status ? 'ON'.green + ' , interval: ' + this.wifiCheck.minutes + ' minutes' : 'OFF'.red;
@@ -1759,11 +1791,12 @@ export class Ropongi {
     }
     
     delGenrePlaylist(genre: any) {
-        for (let i in this.lastGenresPlays)
+        for (let i = 0; i < this.lastGenresPlays.length; i++) {
             if (this.lastGenresPlays[i].directory === genre) {
                 this.lastGenresPlays.splice(i, 1);
                 return true;
             }
+        }
         return false;
     }
     
@@ -1907,14 +1940,17 @@ export class Ropongi {
         }
         if (!this.validateGenresAndTimes(genresAndTimesArr)) return false;
         let times = [];
-        for (let i in genresAndTimesArr) {
-            if (i % 2) times.push(genresAndTimesArr[i]);
+        for (let i = 0; i < genresAndTimesArr.length; i++) {
+            if (i % 2) {
+                times.push(genresAndTimesArr[i]);
+            }
         }
+
         if (genresAndTimesArr.length > 2 && !this.validateSceduleTimes(day, times)) return false;
         let dayIndex = this.weekday.indexOf(day);
         this.schedulesGenres[dayIndex] = [];
         this.schedulesGenresSpliters[dayIndex] = [];
-        for (let i in genresAndTimesArr) {
+        for (let i = 0; i < genresAndTimesArr.length; i++) {
             if (!(i % 2)) {
                 this.schedulesGenres[dayIndex].push(genresAndTimesArr[i]);
             } else {
@@ -1955,7 +1991,8 @@ export class Ropongi {
             this.logAndPrint('fail', 'use GENRE TIME GENRE TIME GENRE etc.. or GENRE. (TIME is only for split between GENRES)');
             return false;
         }
-        for (let i in genresAndTimesArr) {
+
+        for (let i = 0; i < genresAndTimesArr.length; i++) {
             if (!(i % 2)) {
                 if (!this.isRealGenre(genresAndTimesArr[i])) {
                     this.logAndPrint('fail', genresAndTimesArr[i] + ' is not correct genre. use: genres');
@@ -1976,10 +2013,10 @@ export class Ropongi {
     }
     
     make24Hours(time: string) {
-        let h = parseInt(time.split(':')[0]) >= 24 ? parseInt(time.split(':')[0]) - 24 : parseInt(time.split(':')[0]),
+        const h = parseInt(time.split(':')[0]) >= 24 ? parseInt(time.split(':')[0]) - 24 : parseInt(time.split(':')[0]),
             m = (parseInt(time.split(':')[1]) < 10) ? '0' + parseInt(time.split(':')[1]) : parseInt(time.split(':')[1]);
-        h = h < 10 ? '0' + h : h;
-        return h + ':' + m;
+        const _h = h < 10 ? '0' + h : h.toString();
+        return _h + ':' + m;
     }
     
     is48Hours(time: string) {
@@ -2030,7 +2067,7 @@ export class Ropongi {
         return true;
     }
     
-    loadGenresPlayList(day: string | null) {
+    loadGenresPlayList(day: string) {
         this.playlist = {
             files: [],
             currentIndex: 0,
