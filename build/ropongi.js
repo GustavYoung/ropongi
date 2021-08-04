@@ -199,8 +199,9 @@ class Ropongi {
                     switch (line.trim().split(' ')[1]) {
                         case 'time': {
                             let data = line.trim().split(' ').slice(2)[0];
-                            if (data.toString().length === 13)
+                            if ((data === null || data === void 0 ? void 0 : data.toString().length) === 13) {
                                 this.setTimeManual(data);
+                            }
                             else
                                 this.logAndPrint('fail', line.trim() + ' bad command, use help for list of commands.');
                             break;
@@ -347,7 +348,7 @@ class Ropongi {
                 this.logAndPrint('err', `exec error: ${error}`, error);
             }
             if (stderr) {
-                this.logAndPrint('fail', `stderr: ${stderr}`);
+                this.logAndPrint('fail', `stderr on checkWifi ifconfig: ${stderr}`);
             }
             if (stdout && stdout.indexOf('inet addr:') === -1) {
                 this.exec('sudo ifdown --force wlan0', (error, stdout, stderr) => {
@@ -356,7 +357,7 @@ class Ropongi {
                         return;
                     }
                     if (stderr) {
-                        this.logAndPrint('fail', `stderr: ${stderr}`);
+                        this.logAndPrint('fail', `stderr on checkWifi ifdown: ${stderr}`);
                     }
                     setTimeout(() => {
                         this.exec('sudo ifup --force wlan0', (error, stdout, stderr) => {
@@ -365,7 +366,7 @@ class Ropongi {
                                 return;
                             }
                             if (stderr) {
-                                this.logAndPrint('fail', `stderr: ${stderr}`);
+                                this.logAndPrint('fail', `stderr on checkWifi force wlan0: ${stderr}`);
                             }
                             this.logAndPrint('pass', 'wifi restarted.');
                         });
@@ -378,7 +379,7 @@ class Ropongi {
         if (this.rtc) {
             this.exec('sudo hwclock -w', (err, stdout, stderr) => {
                 if (stderr) {
-                    this.logAndPrint('fail', `stderr: ${stderr}`);
+                    this.logAndPrint('fail', `stderr on updateToRTC hwclock: ${stderr}`);
                 }
                 if (err) {
                     this.logAndPrint('err', `RTC couldnt be updated from system time, RTC error: ${err}`, err);
@@ -400,7 +401,7 @@ class Ropongi {
         if (this.rtc) {
             this.exec('sudo hwclock -s', (err, stdout, stderr) => {
                 if (stderr) {
-                    this.logAndPrint('fail', `stderr: ${stderr}`);
+                    this.logAndPrint('fail', `stderr updateFromRTC hwclock: ${stderr}`);
                 }
                 if (err) {
                     this.logAndPrint('err', `RTC couldnt be updated from system time, RTC error: ${err}`, err);
@@ -422,7 +423,7 @@ class Ropongi {
         let deferred = this.q.defer();
         this.exec('sudo echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device', (err, stdout, stderr) => {
             if (stderr) {
-                this.logAndPrint('fail', `stderr: ${stderr}`);
+                this.logAndPrint('fail', `stderr on enableRTC: ${stderr}`);
             }
             this.rtc = (!err || (err && err.code == '1')) ? true : false;
             if (this.rtc) {
@@ -458,14 +459,14 @@ class Ropongi {
                     return;
                 }
                 if (stderr) {
-                    this.logAndPrint('fail', `stderr: ${stderr}`);
+                    this.logAndPrint('fail', `stderr on setTimeManual date --set: ${stderr}`);
                 }
                 if (stdout) {
                     this.logAndPrint('info', 'time set to: ' + new Date());
                     this.updateToRTC((err) => {
                         if (err) {
                             if (typeof err == 'string') {
-                                this.logAndPrint('fail', `stderr: ${err}`);
+                                this.logAndPrint('fail', `stderr on setTimeManual updateToRTC: ${err}`);
                             }
                             else {
                                 this.logAndPrint('err', `exec error: ${err}`, err);
@@ -499,14 +500,14 @@ class Ropongi {
                             return;
                         }
                         if (stderr) {
-                            this.logAndPrint('fail', `stderr: ${stderr}`);
+                            this.logAndPrint('fail', `stderr on setTimeProxy date --set: ${stderr}`);
                         }
                         if (stdout) {
                             this.logAndPrint('info', 'time set to: ' + new Date());
                             this.updateToRTC((err) => {
                                 if (err) {
                                     if (typeof err == 'string') {
-                                        this.logAndPrint('fail', `stderr: ${err}`);
+                                        this.logAndPrint('fail', `stderr on setTimeProxy updateToRTC: ${err}`);
                                     }
                                     else {
                                         this.logAndPrint('err', `exec error: ${err}`, err);
@@ -523,7 +524,7 @@ class Ropongi {
                     this.updateFromRTC((err) => {
                         if (err) {
                             if (typeof err == 'string') {
-                                this.logAndPrint('fail', `stderr: ${err}`);
+                                this.logAndPrint('fail', `stderr  on setTimeProxy updateFromRTC: ${err}`);
                             }
                             else {
                                 this.logAndPrint('err', `exec error: ${err}`, err);
@@ -545,7 +546,7 @@ class Ropongi {
             this.updateFromRTC((err) => {
                 if (err) {
                     if (typeof err == 'string') {
-                        this.logAndPrint('fail', `stderr: ${err}`);
+                        this.logAndPrint('fail', `stderr on setTimeProxy updateFromRTC: ${err}`);
                     }
                     else {
                         this.logAndPrint('err', `exec error: ${err}`, err);
@@ -577,14 +578,14 @@ class Ropongi {
                             this.logAndPrint('err', `exec err: ${err}`, err);
                         }
                         if (stderr) {
-                            this.logAndPrint('fail', `stderr: ${stderr}`);
+                            this.logAndPrint('fail', `stderr on setTime date --set: ${stderr}`);
                         }
                         if (stdout) {
                             this.logAndPrint('info', 'time set to: ' + new Date());
                             this.updateToRTC((err) => {
                                 if (err) {
                                     if (typeof err == 'string') {
-                                        this.logAndPrint('fail', `stderr: ${err}`);
+                                        this.logAndPrint('fail', `stderr on setTime updateToRTC: ${err}`);
                                     }
                                     else {
                                         this.logAndPrint('err', `exec error: ${err}`, err);
@@ -601,7 +602,7 @@ class Ropongi {
                     this.updateFromRTC((err) => {
                         if (err) {
                             if (typeof err == 'string') {
-                                this.logAndPrint('fail', `stderr: ${err}`);
+                                this.logAndPrint('fail', `stderr on setTime updateToRTC: ${err}`);
                             }
                             else {
                                 this.logAndPrint('err', `exec error: ${err}`, err);
@@ -623,7 +624,7 @@ class Ropongi {
             this.updateFromRTC((err) => {
                 if (err) {
                     if (typeof err == 'string') {
-                        this.logAndPrint('fail', `stderr: ${err}`);
+                        this.logAndPrint('fail', `stderr on setTime updateToRTC: ${err}`);
                     }
                     else {
                         this.logAndPrint('err', `exec error: ${err}`, err);
@@ -1294,7 +1295,7 @@ class Ropongi {
                             return;
                         }
                         if (stderr) {
-                            this.logAndPrint('fail', `stderr: ${stderr}`);
+                            this.logAndPrint('fail', `stderr on playNext killall omxplayer: ${stderr}`);
                         }
                         this.logAndPrint('info', 'all omx players killed ' + new Date());
                         this.skipPlay(1);
@@ -1760,7 +1761,7 @@ class Ropongi {
                 this.logAndPrint('err', `Exec error: ${error.message}`, error);
             }
             if (stderr) {
-                this.logAndPrint('fail', `stderr: ${stderr}`);
+                this.logAndPrint('fail', `stderron currentStatus vcgencmd measure_temp: ${stderr}`);
             }
             if (stdout) {
                 this.logAndPrint('pass', 'temp: ' + stdout.toString().replace(/\s+/g, " ").trim().split('=')[1]);
@@ -1771,7 +1772,7 @@ class Ropongi {
                 this.logAndPrint('err', `Exec error: ${error.message}`, error);
             }
             if (stderr) {
-                this.logAndPrint('fail', `stderr: ${stderr}`);
+                this.logAndPrint('fail', `stderr currentStatus df: ${stderr}`);
             }
             if (stdout) {
                 let arr = stdout.toString().replace(/\s+/g, " ").trim().split(' ').slice(8);
@@ -2185,7 +2186,7 @@ class Ropongi {
             if (this.wifiCheck.status) {
                 this.checkWifi();
             }
-            this.eventEmitter.on('timeSet', this.chmodRAll);
+            this.eventEmitter.on('timeSet', () => this.chmodRAll);
             this.eventEmitter.on('timeNotSet', (err) => {
                 let fullCircle = this.skipToNextMillisLink();
                 if (err.code === 0 && !fullCircle) {
