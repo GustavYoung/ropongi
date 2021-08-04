@@ -2195,7 +2195,7 @@ export class Ropongi {
             this.loadLastGenresPlays();
             this.loadSchedules();
             this.loadSchedulesGenresAndSpliters();
-            setTimeout(() => this.runSchedules, 5 * 1000);
+            setTimeout(() => this.runSchedules(), 5 * 1000);
         });
         this.sendMail();
         setInterval(() => {
