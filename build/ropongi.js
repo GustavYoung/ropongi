@@ -1077,7 +1077,7 @@ class Ropongi {
     playIfPlayTime() {
         let deferred = this.q.defer();
         let playingDay = this.getPlayingStartDay();
-        if (!this.omx.isPlaying() && !this.streaming && playingDay()) {
+        if (!this.omx.isPlaying() && !this.streaming && playingDay) {
             this.startPlay(playingDay).then(function () {
                 deferred.resolve();
             }, function () {
@@ -2192,17 +2192,17 @@ class Ropongi {
                 if (err.code === 0 && !fullCircle) {
                     this.logAndPrint('fail', 'next timeset attempt in 10s');
                     clearTimeout(this.setTimeTimeout);
-                    this.setTimeTimeout = setTimeout(() => this.setTime, 10 * 1000);
+                    this.setTimeTimeout = setTimeout(() => this.setTime(), 10 * 1000);
                 }
                 else if (err.code === 1 && !fullCircle) {
                     this.logAndPrint('info', 'next timeset attempt in 10s');
                     clearTimeout(this.setTimeTimeout);
-                    this.setTimeTimeout = setTimeout(() => this.setTime, 10 * 1000);
+                    this.setTimeTimeout = setTimeout(() => this.setTime(), 10 * 1000);
                 }
                 else if (fullCircle) {
                     this.logAndPrint('info', 'next timeset attempt in 60s after attempting all servers');
                     clearTimeout(this.setTimeTimeout);
-                    this.setTimeTimeout = setTimeout(() => this.setTime, 60 * 1000);
+                    this.setTimeTimeout = setTimeout(() => this.setTime(), 60 * 1000);
                     this.milisLinks.fullCircle = false;
                 }
             });
