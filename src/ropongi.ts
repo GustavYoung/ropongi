@@ -2190,7 +2190,7 @@ export class Ropongi {
     }
     
     initialize() {
-        clearTimeout(this.setTimeTimeout);
+        clearTimeout(this.setTimeTimeout());
         this.stopPlay().then(() => {
             this.loadLastGenresPlays();
             this.loadSchedules();
