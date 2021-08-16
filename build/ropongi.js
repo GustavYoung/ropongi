@@ -1099,7 +1099,8 @@ class Ropongi {
         });
     }
     startSchedule() {
-        this.startPlay().then(() => {
+        let playingDay = this.getPlayingStartDay();
+        this.startPlay(playingDay).then(() => {
             this.logAndPrint('info', 'starting task play');
         }, () => {
             this.logAndPrint('warningInfo', 'cant task');
@@ -1158,7 +1159,7 @@ class Ropongi {
             deferred.resolve();
         }
         // return true;
-        return deferred.promise();
+        return deferred.promise;
     }
     startPlayOLD(day) {
         if (this.omx.isPlaying() || this.streaming)
