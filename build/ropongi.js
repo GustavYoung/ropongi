@@ -1077,7 +1077,7 @@ class Ropongi {
     playIfPlayTime() {
         let deferred = this.q.defer();
         let playingDay = this.getPlayingStartDay();
-        if (!this.omx.isPlaying() && !this.streaming && playingDay) {
+        if (!this.omx.isPlaying() && !this.streaming && playingDay()) {
             this.startPlay(playingDay).then(function () {
                 deferred.resolve();
             }, function () {
