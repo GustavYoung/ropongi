@@ -1077,8 +1077,7 @@ export class Ropongi {
     }
     
     startSchedule() {
-        let playingDay = this.getPlayingStartDay();
-        this.startPlay(playingDay).then(() => {
+        this.playIfPlayTime().then(() => {
             this.logAndPrint('info', 'starting task play');
         }, () => {
             this.logAndPrint('warningInfo', 'cant task');
