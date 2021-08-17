@@ -2186,7 +2186,7 @@ export class Ropongi {
                 this.milisLinks.fullCircle = false;
             }
         });
-        this.enableRTC().then(this.setTime(), this.setTime());
+        this.enableRTC().then(this.setTime, this.setTime);
     }
     
     initialize() {
