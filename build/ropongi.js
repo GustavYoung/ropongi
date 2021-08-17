@@ -1195,7 +1195,7 @@ class Ropongi {
         return deferred.promise;
     }
     skipPlay(val) {
-        const num = parseInt(val.toString()) || 0;
+        const num = parseInt(val.toString()) | 0;
         if (num && this.playlist.files.length && (num < 0 || num >= this.playlist.files.length)) {
             this.logAndPrint('fail', 'skip between 0 to ' + (this.playlist.files.length - 1));
             return;
