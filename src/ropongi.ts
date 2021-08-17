@@ -1137,7 +1137,7 @@ export class Ropongi {
             deferred.resolve();
         }
         // return true;
-        return deferred.promise();
+        return deferred.promise;
     }
     
     startPlayOLD(day: any) {
@@ -2190,7 +2190,7 @@ export class Ropongi {
     }
     
     initialize() {
-        clearTimeout(this.setTimeTimeout);
+        clearTimeout(this.setTimeTimeout());
         this.stopPlay().then(() => {
             this.loadLastGenresPlays();
             this.loadSchedules();
