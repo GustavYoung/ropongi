@@ -1119,13 +1119,13 @@ class Ropongi {
                         minute: stm,
                         dayOfWeek: i
                     };
-                    this.schedulesStart[i] = this.schedule.scheduleJob(this.schedulesStartObject[i], this.startSchedule());
+                    this.schedulesStart[i] = this.schedule.scheduleJob(this.schedulesStartObject[i], () => this.startSchedule());
                     this.schedulesStopObject[i] = {
                         hour: eth,
                         minute: etm,
                         dayOfWeek: this.weekday.indexOf(this.schedules[i].endDay)
                     };
-                    this.schedulesStop[i] = this.schedule.scheduleJob(this.schedulesStopObject[i], this.stopSchedule());
+                    this.schedulesStop[i] = this.schedule.scheduleJob(this.schedulesStopObject[i], () => this.stopSchedule());
                 }
             }
         }
