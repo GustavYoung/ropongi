@@ -51,7 +51,7 @@ export class Ropongi {
     util = require('util');
     version = '0.7.1';
     weekday = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    wifiCheck = { status: true, minutes: 10 };
+    wifiCheck = { status: false, minutes: 10 };
     wifiCheckIntervalObject: any;
 
     constructor(
@@ -405,7 +405,7 @@ export class Ropongi {
 
     enableRTC() {
         let deferred = this.q.defer();
-        this.exec('sudo echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device', (err: NodeJS.ErrnoException, stdout: string|Buffer, stderr: string|Buffer) => {
+        this.exec('sudo hwclock -r', (err: NodeJS.ErrnoException, stdout: string|Buffer, stderr: string|Buffer) => {
             if(stderr){
                 this.logAndPrint('fail', `stderr on enableRTC: ${stderr}`)
             }
@@ -981,7 +981,7 @@ export class Ropongi {
     
     sendMailIfIpChange() {
         //Fuction out of use
-        this.logAndPrint('info', 'mail abortado cambio de IP');
+        this.logAndPrint('info', 'IP Changed ()');
     }
 
  

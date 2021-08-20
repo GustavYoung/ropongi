@@ -59,7 +59,7 @@ class Ropongi {
         this.util = require('util');
         this.version = '0.7.1';
         this.weekday = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        this.wifiCheck = { status: true, minutes: 10 };
+        this.wifiCheck = { status: false, minutes: 10 };
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
         this.omx.on('play', (path) => {
@@ -421,7 +421,7 @@ class Ropongi {
     }
     enableRTC() {
         let deferred = this.q.defer();
-        this.exec('sudo echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device', (err, stdout, stderr) => {
+        this.exec('sudo hwclock -r', (err, stdout, stderr) => {
             if (stderr) {
                 this.logAndPrint('fail', `stderr on enableRTC: ${stderr}`);
             }
@@ -1011,7 +1011,7 @@ class Ropongi {
     }
     sendMailIfIpChange() {
         //Fuction out of use
-        this.logAndPrint('info', 'mail abortado cambio de IP');
+        this.logAndPrint('info', 'IP Changed ()');
     }
     setLogs(bool) {
         this.configs.logs = bool;
