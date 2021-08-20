@@ -15,7 +15,7 @@ case "$1" in
 start)
         echo "Starting ropongi Player..."
         cd /home/uslu/ropongi/;
-        sudo screen -dmS ropongi node index.js;
+        sudo screen -dmS ropongi node new-index.js;
 ;;
 
 stop)
