@@ -40,7 +40,7 @@ class Ropongi {
         this.outputTypes = ['both', 'hdmi', 'local'];
         this.passport = { name: 'n/a', place: 'n/a', address: 'n/a' };
         this.mailOptions = { from: this.passport.name, to: 'ropongi@ideasign.mx', subject: 'ropongiStream ' + this.passport.name, text: 'no messege' };
-        this.playlist = { files: [], currentIndex: 0, path: '', directory: '' };
+        this.playlist = { files: [], currentIndex: 0, path: '', directory: '', mtimeMs: 0 };
         this.q = require('q');
         this.rl = require('readline').createInterface(process.stdin, process.stdout);
         this.rtc = true;
@@ -71,6 +71,28 @@ class Ropongi {
             let file = pathArray.pop();
             this.logAndPrint('info', 'playing index: ' + (this.playlist.files.indexOf(file) + 1)
                 + '/' + this.playlist.files.length + ' : ' + file + ' in ' + this.playlist.directory + ' folder.');
+            // Compare 
+            this.fs.stat(this.playlist.path + '/_playlist.m3u', (error, stats) => {
+                if (error) {
+                    this.logAndPrint('err', ` ${error.message}`, error);
+                }
+                else {
+                    if (stats.mtimeMs > this.playlist.mtimeMs) {
+                        let deferred = this.q.defer();
+                        switch (this.configs.schedulesType) {
+                            case 'days':
+                                this.loadPlayList(this.updateDay().name);
+                                break;
+                            case 'genres':
+                                this.loadGenresPlayList(this.updateDay().name);
+                                break;
+                            default:
+                                deferred.reject(new Error('missing tasks type in configs'));
+                                break;
+                        }
+                    }
+                }
+            });
         });
         this.omx.on('stderr', (err) => {
             this.logAndPrint('err', 'omxplayer error: ' + err.message, err);
@@ -1383,7 +1405,8 @@ class Ropongi {
             files: [],
             currentIndex: 0,
             path: '',
-            directory: ''
+            directory: '',
+            mtimeMs: 0
         };
         this.playlist.directory = day;
         this.playlist.path = this.basePath + '/uploads/' + this.playlist.directory;
@@ -1394,6 +1417,16 @@ class Ropongi {
         if (this.fs.existsSync(this.playlist.path + '/_playlist.m3u')) {
             let data = this.fs.readFileSync(this.playlist.path + '/_playlist.m3u', {
                 encoding: 'utf8'
+            });
+            this.fs.stat(this.playlist.path + '/_playlist.m3u', (error, stats) => {
+                if (error) {
+                    this.logAndPrint('err', ` ${error.message}`, error);
+                }
+                else {
+                    if (stats.mtimeMs > this.playlist.mtimeMs) {
+                        this.playlist.mtimeMs = stats.mtimeMs;
+                    }
+                }
             });
             if (data) {
                 this.logAndPrint('info', 'loading ' + this.playlist.directory + ' playlist.');
@@ -2087,7 +2120,8 @@ class Ropongi {
             files: [],
             currentIndex: 0,
             path: '',
-            directory: ''
+            directory: '',
+            mtimeMs: 0
         };
         if (!this.isRealDayName(day))
             return false;
@@ -2104,6 +2138,16 @@ class Ropongi {
             ;
             let data = this.fs.readFileSync(this.playlist.path + '/_playlist.m3u', {
                 encoding: 'utf8'
+            });
+            this.fs.stat(this.playlist.path + '/_playlist.m3u', (error, stats) => {
+                if (error) {
+                    this.logAndPrint('err', ` ${error.message}`, error);
+                }
+                else {
+                    if (stats.mtimeMs > this.playlist.mtimeMs) {
+                        this.playlist.mtimeMs = stats.mtimeMs;
+                    }
+                }
             });
             if (data) {
                 this.logAndPrint('info', 'loading ' + this.playlist.directory + ' playlist.');

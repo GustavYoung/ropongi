@@ -30,7 +30,7 @@ export class Ropongi {
     outputTypes = ['both', 'hdmi', 'local'];
     passport = { name: 'n/a', place: 'n/a', address: 'n/a' };
     mailOptions = { from: this.passport.name, to: 'ropongi@ideasign.mx', subject: 'ropongiStream ' + this.passport.name, text: 'no messege' };
-    playlist = { files:[] as string[] , currentIndex: 0, path: '', directory: '' };
+    playlist = { files:[] as string[] , currentIndex: 0, path: '', directory: '', mtimeMs:0 };
     q = require('q');
     rl = require('readline').createInterface(process.stdin, process.stdout);
     rtc = true;
@@ -54,9 +54,7 @@ export class Ropongi {
     wifiCheck = { status: false, minutes: 10 };
     wifiCheckIntervalObject: any;
 
-    constructor(
-        
-    ) {
+    constructor( ) {
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
         this.omx.on('play', (path: string) => {
@@ -64,11 +62,34 @@ export class Ropongi {
             if (!pathArray.length){
                 return;
             } 
-            
+
             // Test por string
             let file = pathArray.pop() as string;
             this.logAndPrint('info', 'playing index: ' + (this.playlist.files.indexOf(file) + 1) 
             + '/' + this.playlist.files.length + ' : ' + file + ' in ' + this.playlist.directory + ' folder.');
+            
+            // Compare 
+            this.fs.stat(this.playlist.path + '/_playlist.m3u', (error:any, stats:any) => {
+                if (error) {
+                     this.logAndPrint('err', ` ${error.message}`, error);
+                }
+                else {
+                    if(stats.mtimeMs > this.playlist.mtimeMs) {
+                        let deferred = this.q.defer();
+                        switch (this.configs.schedulesType) {
+                            case 'days':
+                                this.loadPlayList( this.updateDay().name);
+                                break;
+                            case 'genres':
+                                this.loadGenresPlayList( this.updateDay().name);
+                                break;
+                            default:
+                                deferred.reject(new Error('missing tasks type in configs'));
+                                break;
+                        }
+                    }
+                }
+            });
         });
         this.omx.on('stderr', (err:Error) => {
             this.logAndPrint('err', 'omxplayer error: ' + err.message, err);
@@ -77,7 +98,7 @@ export class Ropongi {
         this.rl.on('line', (line: string) => {
             let arr;
             this.logInput(line);
-            
+
             switch (line.trim().split(' ')[0]) {
                 case 'mail':
                     this.sendMail();
@@ -326,7 +347,7 @@ export class Ropongi {
     chmodRAll() {
         this.exec('sudo chmod -R 777 *');
     }
-    
+
     checkWifi() {
         this.exec('sudo ifconfig wlan0', (error: Error, stdout: string | string[], stderr: string|Buffer) => {
             if (error) {
@@ -542,7 +563,7 @@ export class Ropongi {
             });
         });
     }
-    
+
     setTime() {
         this.logAndPrint('info', 'attempt to load time from: ' + this.milisLinks.links[this.milisLinks.index].split('/')[2]);
         this.http.get(this.milisLinks.links[this.milisLinks.index], (res: any) => {
@@ -615,7 +636,7 @@ export class Ropongi {
             });
         });
     }
-    
+
     logError(data: string) {
         let path = this.basePath + '/logs',
             fileName = 'omxplayer_errors.log';
@@ -625,7 +646,7 @@ export class Ropongi {
             });
         } 
     }
-    
+
     logInput(input: string) {
         let path = this.basePath + '/logs',
             fileName = this.getDate() + '.log';
@@ -633,7 +654,7 @@ export class Ropongi {
             if (err) console.log('info: '.red + '(' + this.getTime() + ') ' + 'failing to write log, ' + err);
         });
     }
-    
+
     logAndPrint(type: string, output: any, err:Error|null = null) {
         if (type === 'pass'){
              console.log('pass: '.green + '(' + this.getTime() + ') ' + output);
@@ -679,23 +700,23 @@ export class Ropongi {
     saveWifiCheck() {
         return !!this.fs.writeFileSync(this.basePath + '/saves/wificheck.json', JSON.stringify(this.wifiCheck));
     }
-    
+
     saveConfigs() {
         return !!this.fs.writeFileSync(this.basePath + '/saves/configs.json', JSON.stringify(this.configs));
     }
-    
+
     savePassport() {
         return !!this.fs.writeFileSync(this.basePath + '/saves/passport.json', JSON.stringify(this.passport));
     }
-    
+
     saveEmail() {
         return !!this.fs.writeFileSync(this.basePath + '/saves/email.json', JSON.stringify(this.email));
     }
-    
+
     saveGenres() {
         return !!this.fs.writeFileSync(this.basePath + '/saves/genres.json', JSON.stringify(this.genres));
     }
-    
+
     addGenres(genresArr: string[] ) {
         let addedGenres = '';
         for (let i in genresArr) {
@@ -714,13 +735,13 @@ export class Ropongi {
         if (addedGenres.length !== 0) this.logAndPrint('pass', 'new genres: ' + addedGenres);
         else this.logAndPrint('pass', 'no new genres added.');
     }
-    
+
     isUsedGenre(genre: string) {
         for (let i in this.schedulesGenres)
             if (this.schedulesGenres[i].indexOf(genre.toLowerCase()) !== -1) return true;
         return false;
     }
-    
+
     delGenres(genresArr: any[]) {
         let deletedGenres = '',
             usedGenres = '';
@@ -747,7 +768,7 @@ export class Ropongi {
         if (deletedGenres.length !== 0) this.logAndPrint('pass', 'removed genres: ' + deletedGenres);
         else this.logAndPrint('pass', 'no genres removed.');
     }
-    
+
     loadGenres() {
         let tempGenres = this.genres;
         if (this.fs.existsSync(this.basePath + '/saves/genres.json')) {
@@ -772,7 +793,7 @@ export class Ropongi {
                 this.email = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/email.json'));
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/email.json');
-                this.logAndPrint('err', 'email.json damaged, and deleted.', err);
+                this.logAndPrint('err', 'email.json damaged, and deleted.', err as Error);
                 this.email = tempEmail;
                 return false;
             }
@@ -789,7 +810,7 @@ export class Ropongi {
                 this.omxconfig['-o'] = this.configs.output;
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/configs.json');
-                this.logAndPrint('err', 'email.json damaged, and deleted.', err);
+                this.logAndPrint('err', 'email.json damaged, and deleted.', err as Error);
                 this.configs = tempConfigs;
                 return false;
             }
@@ -804,7 +825,7 @@ export class Ropongi {
                 this.passport = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/passport.json'));
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/passport.json');
-                this.logAndPrint('err', 'passport.json damaged, and deleted.', err);
+                this.logAndPrint('err', 'passport.json damaged, and deleted.', err as Error);
                 this.passport = tempConfigs;
                 return false;
             }
@@ -819,7 +840,7 @@ export class Ropongi {
                 this.wifiCheck = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/wificheck.json'));
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/wificheck.json');
-                this.logAndPrint('err', 'wificheck.json damaged, and deleted.', err);
+                this.logAndPrint('err', 'wificheck.json damaged, and deleted.', err as Error);
                 this.wifiCheck = tempWifiCheck;
                 return false;
             }
@@ -862,7 +883,7 @@ export class Ropongi {
                     this.lastPlay = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/lastplay.json'));
                 } catch (err) {
                     this.fs.unlinkSync(this.basePath + '/saves/lastplay.json');
-                    this.logAndPrint('err', 'lastplay.json damaged, and deleted.', err);
+                    this.logAndPrint('err', 'lastplay.json damaged, and deleted.', err as Error);
                     this.lastPlay = tempLastPlay;
                     return false;
                 }
@@ -879,7 +900,7 @@ export class Ropongi {
                     this.lastGenresPlays = JSON.parse(this.fs.readFileSync(this.basePath + '/saves/lastgenresplays.json'));
                 } catch (err) {
                     this.fs.unlinkSync(this.basePath + '/saves/lastgenresplays.json');
-                    this.logAndPrint('err', 'lastgenresplays.json damaged, and deleted.', err);
+                    this.logAndPrint('err', 'lastgenresplays.json damaged, and deleted.', err  as Error);
                     this.lastGenresPlays = tempLastGenresPlays;
                     return false;
                 }
@@ -892,7 +913,7 @@ export class Ropongi {
             return true;
         }
     }
-    
+
     loadLastGenresPlays() {
         let tempLastGenresPlays = this.lastGenresPlays;
         if (this.fs.existsSync(this.basePath + '/saves/lastgenresplays.json')) {
@@ -901,17 +922,17 @@ export class Ropongi {
                 return true;
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/lastgenresplays.json');
-                this.logAndPrint('err', 'lastgenresplays.json damaged, and deleted.', err);
+                this.logAndPrint('err', 'lastgenresplays.json damaged, and deleted.', err  as Error);
                 this.lastGenresPlays = tempLastGenresPlays;
                 return false;
             }
         }
     }
-    
+
     saveLastGenresPlays() {
         return !!this.fs.writeFileSync(this.basePath + '/saves/lastgenresplays.json', JSON.stringify(this.lastGenresPlays));
     }
-    
+
     setWifiCheck(status: boolean, minutes: number = 0) {
         if (this.wifiCheckIntervalObject) clearInterval(this.wifiCheckIntervalObject);
         if (status === true) {
@@ -929,7 +950,7 @@ export class Ropongi {
         }
         this.saveWifiCheck();
     }
-    
+
     setConfigs(field: any, data: string) {
         switch (field) {
             case 'output':
@@ -947,7 +968,7 @@ export class Ropongi {
         this.saveConfigs();
         return true;
     }
-    
+
     setPassport(field: any, data: string) {
         switch (field) {
             case 'name':
@@ -966,40 +987,38 @@ export class Ropongi {
         this.savePassport();
         return true;
     }
-    
+
     setEmail(e: string, p: string) {
         this.email.auth.user = e;
         this.email.auth.pass = p;
         this.saveEmail();
         return true;
     }
-    
+
     sendMail() {
         //Fuction out of use
         this.logAndPrint('Info', 'mail aborted ');
     }
-    
+
     sendMailIfIpChange() {
         //Fuction out of use
         this.logAndPrint('info', 'IP Changed ()');
     }
 
- 
-    
     setLogs(bool: boolean) {
         this.configs.logs = bool;
         let status = this.configs.logs ? 'on' : 'off';
         this.logAndPrint('pass', 'logging turned ' + status + '.');
         this.saveConfigs();
     }
-    
+
     setDebug(bool: boolean) {
         this.configs.debug = bool;
         let status = this.configs.debug ? 'on' : 'off';
         this.logAndPrint('pass', 'debug logging turned ' + status + '.');
         this.saveConfigs();
     }
-    
+
     printHelp() {
         this.logAndPrint('pass', 'ropongiStream commands list:')
         this.logAndPrint('pass', '| * DAY = { all days,' + this.weekday + ' }');
@@ -1035,7 +1054,7 @@ export class Ropongi {
         this.logAndPrint('pass', '| tasks');
         this.logAndPrint('pass', '| genres');
     }
-    
+
     makeMaindirs() {
         for (let i in this.appdirs) {
             if (!this.fs.existsSync(this.basePath + '/' + this.appdirs[i])) {
@@ -1043,7 +1062,7 @@ export class Ropongi {
             }
         }
     }
-    
+
     makeDaydirs() {
         for (let i in this.weekday) {
             if (!this.fs.existsSync(this.basePath + '/uploads/' + this.weekday[i])) {
@@ -1051,7 +1070,7 @@ export class Ropongi {
             }
         }
     }
-    
+
     playIfPlayTime() {
         let deferred = this.q.defer();
         let playingDay = this.getPlayingStartDay();
@@ -1068,14 +1087,14 @@ export class Ropongi {
         }
         return deferred.promise;
     }
-    
+
     stopSchedule() {
         this.stopPlay().then(() => {
             this.logAndPrint('info', 'task ended');
             this.shutdownIfSet();
         });
     }
-    
+
     startSchedule() {
         this.startPlay().then(() => {
             this.logAndPrint('info', 'starting task play');
@@ -1083,7 +1102,7 @@ export class Ropongi {
             this.logAndPrint('warningInfo', 'cant task');
         });
     }
-    
+
     runSchedules() {
         let sth, stm, eth, etm;
         for (let i = 0; i < 7; i++) {
@@ -1114,7 +1133,7 @@ export class Ropongi {
             this.logAndPrint('err', err.message, err);
         });
     }
-    
+
     startPlay(day: string | null = null) {
         let deferred = this.q.defer();
         if (this.omx.isPlaying() || this.streaming) {
@@ -1139,7 +1158,7 @@ export class Ropongi {
         // return true;
         return deferred.promise;
     }
-    
+
     startPlayOLD(day: any) {
         if (this.omx.isPlaying() || this.streaming) return false;
         day = day ? day : this.updateDay().name;
@@ -1157,7 +1176,7 @@ export class Ropongi {
         this.playPlayList();
         return true;
     }
-    
+
     stopPlay() {
         let deferred = this.q.defer();
         this.streaming = false;
@@ -1173,7 +1192,7 @@ export class Ropongi {
         }
         return deferred.promise;
     }
-    
+
     skipPlay(val: string | number) {
         const num = parseInt(val.toString()) || 0;
         if (num && this.playlist.files.length && (num < 0 || num >= this.playlist.files.length)) {
@@ -1192,7 +1211,7 @@ export class Ropongi {
             });
         }
     }
-    
+
     getTime() {
         let hour = new Date().getHours().toString(),
             minute = new Date().getMinutes().toString(),
@@ -1202,7 +1221,7 @@ export class Ropongi {
         second = parseInt(second) < 10 ? '0' + second : second;
         return hour + ':' + minute + ":" + second;
     }
-    
+
     getDate() {
         let date = new Date();
         let dd = date.getDate(),
@@ -1210,16 +1229,15 @@ export class Ropongi {
             yy = date.getFullYear();
         return yy + '-' + mm + '-' + dd;
     }
-    
+
     playPlayList() {
         //sendMailIfIpChange();
-        
+
         if (this.omx.isPlaying() || this.playlist.files.length === 0) return false;
         this.streaming = true;
         this.playNext();
-        
     }
-    
+
     playNext() {
         let forceStop = false;
         let streamedOnesAtLeast = this.playlist.currentIndex === 0 ? false : true;
@@ -1283,10 +1301,10 @@ export class Ropongi {
                         if(stderr){
                             this.logAndPrint('fail', `stderr on playNext killall omxplayer: ${stderr}`)
                         }
-                        
+                    
                         this.logAndPrint('info', 'all omx players killed ' + new Date());
                         this.skipPlay(1); 
-                        
+                    
                     });
                     this.playNext();
                 }
@@ -1298,7 +1316,7 @@ export class Ropongi {
             this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
         }
     }
-    
+
     getPlayingStartDay() {
         let sStartDay, sStopDay, sStartDayIndex, sStopDayIndex, sStartHour, sStartMinute, sStopHour, sStopMinute,
             day = this.weekday[new Date().getDay()],
@@ -1327,14 +1345,14 @@ export class Ropongi {
         }
         return null;
     }
-    
+
     getPreviousDayIndex(index:number) {
         if (index >= 0 && index <= 6) {
             return index > 0 ? index - 1 : 6;
         }
         return -1;
     }
-    
+
     loadSchedules() {
         if (this.fs.existsSync(this.basePath + '/saves/tasks.json')) {
             try {
@@ -1345,7 +1363,7 @@ export class Ropongi {
             }
         }
     }
-    
+
     displaySchedules() {
         let haveSchedules = false;
         this.logAndPrint('pass', 'tasks list:');
@@ -1362,13 +1380,13 @@ export class Ropongi {
             this.logAndPrint('pass', '|- ' + 'empty'.red);
         }
     }
-    
+
     saveSchedules() {
         if (this.fs.writeFileSync(this.basePath + '/saves/tasks.json', JSON.stringify(this.schedules))) {
             this.logAndPrint('pass', 'tasks list:');
         }
     }
-    
+
     loadPlayList(day: string) {
         if (!this.isRealDayName(day)) {
             return false;
@@ -1377,7 +1395,8 @@ export class Ropongi {
             files: [],
             currentIndex: 0,
             path: '',
-            directory: ''
+            directory: '',
+            mtimeMs: 0
         };
         this.playlist.directory = day;
         this.playlist.path = this.basePath + '/uploads/' + this.playlist.directory;
@@ -1388,6 +1407,16 @@ export class Ropongi {
         if (this.fs.existsSync(this.playlist.path + '/_playlist.m3u')) {
             let data = this.fs.readFileSync(this.playlist.path + '/_playlist.m3u', {
                 encoding: 'utf8'
+            });
+            this.fs.stat(this.playlist.path + '/_playlist.m3u', (error:any, stats:any) => {
+                if (error) {
+                     this.logAndPrint('err', ` ${error.message}`, error);
+                }
+                else {
+                    if(stats.mtimeMs > this.playlist.mtimeMs) {
+                        this.playlist.mtimeMs = stats.mtimeMs;
+                    }
+                }
             });
             if (data) {
                 this.logAndPrint('info', 'loading ' + this.playlist.directory + ' playlist.');
@@ -1402,7 +1431,7 @@ export class Ropongi {
             this.playlist.files = [];
         }
     }
-    
+
     isRealDayName(toCheck: string) {
         if (!toCheck || !this._l.isString(toCheck) || this.weekday.indexOf(toCheck.toLowerCase()) === -1) return false;
         return true;
@@ -1440,7 +1469,7 @@ export class Ropongi {
             else if (this.isRealGenre(arrDayGenre[0])) this.delGenresPlayList(arrDayGenre[0]);
         }
     }
-    
+
     delPlayList(day: string) {
         if (this.isRealDayName(day)) {
             let daydir = this.basePath + '/uploads/' + day;
@@ -1456,7 +1485,7 @@ export class Ropongi {
         } else this.logAndPrint('fail', 'day is misspelled');
         return false;
     }
-    
+
     createPlayListSwitch(arrDayGenre: string | any[], random: boolean, shared: boolean) {
         if (arrDayGenre.length === 2 && this.isAllString(arrDayGenre[0])) {
             if (arrDayGenre[1] === 'days') this.createPlayList(arrDayGenre[0], random, shared);
@@ -1466,7 +1495,7 @@ export class Ropongi {
             else if (this.isRealGenre(arrDayGenre[0])) this.createGenresPlayList(arrDayGenre[0], random);
         }
     }
-    
+
     createPlayList(day: string, random: any, shared: any) {
         random = random ? random : false;
         shared = shared ? shared : false;
@@ -1510,7 +1539,7 @@ export class Ropongi {
             }
         }
     }
-    
+
     getOnlyPlayFiles(arr: string | any[]) {
         let retArr = [];
         if (this.util.isArray(arr)) {
@@ -1527,7 +1556,7 @@ export class Ropongi {
         }
         return retArr;
     }
-    
+
     updateDay() {
         const name = this.weekday[new Date().getDay()];
         const today = {
@@ -1538,7 +1567,7 @@ export class Ropongi {
         this.today = today;
         return today;
     }
-    
+
     isEmptyScheduleTime(scheduleObject: { startDay?: any; startDayIndex: any; startTime: any; endDay?: any; endDayIndex: any; endTime: any; }) {
         let prevIndex = (scheduleObject.startDayIndex - 1 + 7) % 7,
             nextIndex = (scheduleObject.startDayIndex + 1 + 7) % 7,
@@ -1559,7 +1588,7 @@ export class Ropongi {
         }
         return true;
     }
-    
+
     delSchedule(day: string) {
         if (this.isRealDayName(day)) {
             let ipt = this.getPlayingStartDay();
@@ -1608,7 +1637,7 @@ export class Ropongi {
         } else this.logAndPrint('fail', 'day is misspelled');
         return false;
     }
-    
+
     isCorrectStartEndTime(start: string, end: string) {
         let shr, sm, ehr, em;
         shr = parseInt(start.split(':')[0]);
@@ -1618,7 +1647,7 @@ export class Ropongi {
         if (shr * 60 + sm < ehr * 60 + em) return true;
         return false;
     }
-    
+
     addSchedule(...args: string[]) {
         let startDay, startDayIndex, endDayIndex, startTime, endDay, endTime, scheduleObject;
         if (!(args.length >= 3 && args.length <= 4)) {
@@ -1695,14 +1724,14 @@ export class Ropongi {
         if (this.isDaysMode()) this.runSchedules();
         return true;
     }
-    
+
     getUptime() {
         let seconds = this.os.uptime();
         return Math.floor(seconds / 86400) + ' days ' + Math.floor((seconds % 86400) / 3600) 
             + ' hours ' + Math.floor(((seconds % 86400) % 3600) / 60) + ' minutes ' 
             + Math.floor(((seconds % 86400) % 3600) % 60) + ' seconds';
     }
-    
+
     currentStatus() {
         this.updateDay();
         this.logAndPrint('pass', 'Ropongi_Stream v' + this.version + ' ' + this.passport.name + ' current status:');
@@ -1755,7 +1784,7 @@ export class Ropongi {
             }
         });
     }
-    
+
     getListOfGenresDirs() {
         let path = this.basePath + '/uploads/genres',
             dirs: any[] = [],
@@ -1770,19 +1799,19 @@ export class Ropongi {
         }
         return dirs;
     }
-    
+
     getLastGenresPlaysPlaylist(genre: any) {
         for (let i in this.lastGenresPlays)
             if (this.lastGenresPlays[i].directory === genre) return this.lastGenresPlays[i];
         return null;
     }
-    
+
     getLastGenresPlaysPlaylistIndex(genre: any) {
         for (let i in this.lastGenresPlays)
             if (this.lastGenresPlays[i].directory === genre) return i;
         return -1;
     }
-    
+
     updateLastGenresPlays(playlist: { files?: any[]; currentIndex?: number; directory: any; }) {
         let genre = playlist.directory;
         if (this.getLastGenresPlaysPlaylistIndex(genre) === -1) {
@@ -1791,7 +1820,7 @@ export class Ropongi {
         }
         return false;
     }
-    
+
     delGenrePlaylist(genre: any) {
         for (let i = 0; i < this.lastGenresPlays.length; i++) {
             if (this.lastGenresPlays[i].directory === genre) {
@@ -1801,7 +1830,7 @@ export class Ropongi {
         }
         return false;
     }
-    
+
     printGenres() {
         this.logAndPrint('pass', 'genres list: ' + this.genres.length + ' genres');
         if (this.genres.length !== 0) {
@@ -1813,16 +1842,16 @@ export class Ropongi {
             }
         } else this.logAndPrint('pass', '|- ' + 'empty'.red);
     }
-    
+
     isRealGenre(genre: any) {
         if (!genre || !this._l.isString(genre) || this.genres.indexOf(genre) === -1) return false;
         return true;
     }
-    
+
     isCurrentType(type: string) {
         return this.configs.schedulesType === type;
     }
-    
+
     setSchedulesType(type: string) {
         if (this.isCurrentType(type)) {
             this.logAndPrint('passInfo', 'schedules type ' + type + ' already set.');
@@ -1839,7 +1868,7 @@ export class Ropongi {
             });
         });
     }
-    
+
     delGenresPlayList(genre: string) {
         if (this.isRealGenre(genre)) {
             this.delGenrePlaylist(genre);
@@ -1857,15 +1886,15 @@ export class Ropongi {
         } else this.logAndPrint('fail', 'genre folder is misspelled');
         return false;
     }
-    
+
     isGenresMode() {
         return this.configs.schedulesType === 'genres';
     }
-    
+
     isDaysMode() {
         return this.configs.schedulesType === 'days';
     }
-    
+
     createGenresPlayList(genre: string, random: boolean) {
         random = random ? random : false;
         let i = 0,
@@ -1883,7 +1912,7 @@ export class Ropongi {
         }
         for (i; i < endi; i++) {
             genredir = this.basePath + '/uploads/genres/' + genres[i];
-            
+
             if (this.fs.existsSync(genredir)) {
                 files = this.getOnlyPlayFiles(this.fs.readdirSync(genredir + '/'));
                 if (this.util.isArray(files)) {
@@ -1911,7 +1940,7 @@ export class Ropongi {
             }
         }
     }
-    
+
     saveSchedulesGenresAndSpliters() {
         let obj = {
             genres: this.schedulesGenres,
@@ -1919,7 +1948,7 @@ export class Ropongi {
         }
         return !!this.fs.writeFileSync(this.basePath + '/saves/tasksgenres.json', JSON.stringify(obj));
     }
-    
+
     loadSchedulesGenresAndSpliters() {
         if (this.fs.existsSync(this.basePath + '/saves/tasksgenres.json')) {
             try {
@@ -1928,13 +1957,13 @@ export class Ropongi {
                 this.schedulesGenresSpliters = obj.spliters;
             } catch (err) {
                 this.fs.unlinkSync(this.basePath + '/saves/tasksgenres.json');
-                this.logAndPrint('err', 'tasksgenres.json damaged, and deleted.', err);
+                this.logAndPrint('err', 'tasksgenres.json damaged, and deleted.', err as Error);
                 return false;
             }
         }
         return true;
     }
-    
+
     setScheduleGenres(day: string, genresAndTimesArr: string | any[]) {
         if (!this.isRealDayName(day)) {
             this.logAndPrint('fail', day + ' day is misspelled.');
@@ -1964,7 +1993,7 @@ export class Ropongi {
         this.runSchedules();
         return true;
     }
-    
+
     buildTimeLineGenres(day: string) {
         if (!this.isRealDayName(day)) return '';
         let dayIndex = this.weekday.indexOf(day),
@@ -1987,7 +2016,7 @@ export class Ropongi {
         }
         return timeline.trim();
     }
-    
+
     validateGenresAndTimes(genresAndTimesArr: string | any[]) {
         if (!(genresAndTimesArr.length % 2)) {
             this.logAndPrint('fail', 'use GENRE TIME GENRE TIME GENRE etc.. or GENRE. (TIME is only for split between GENRES)');
@@ -2007,28 +2036,28 @@ export class Ropongi {
         }
         return true;
     }
-    
+
     make48Hours(time: string) {
         let h = parseInt(time.split(':')[0]) <= 24 ? parseInt(time.split(':')[0]) + 24 : parseInt(time.split(':')[0]),
             m = (parseInt(time.split(':')[1]) < 10) ? '0' + parseInt(time.split(':')[1]) : parseInt(time.split(':')[1]);
         return h + ':' + m;
     }
-    
+
     make24Hours(time: string) {
         const h = parseInt(time.split(':')[0]) >= 24 ? parseInt(time.split(':')[0]) - 24 : parseInt(time.split(':')[0]),
             m = (parseInt(time.split(':')[1]) < 10) ? '0' + parseInt(time.split(':')[1]) : parseInt(time.split(':')[1]);
         const _h = h < 10 ? '0' + h : h.toString();
         return _h + ':' + m;
     }
-    
+
     is48Hours(time: string) {
         return parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]) >= 1440
     }
-    
+
     is24Hours(time: string) {
         return parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]) < 1440
     }
-    
+
     getCurrentGenre(day: string) {
         let dayIndex = this.weekday.indexOf(day),
             currentTime = this.schedules[dayIndex].startDayIndex !== this.schedules[dayIndex].endDayIndex 
@@ -2046,7 +2075,7 @@ export class Ropongi {
         }
         return this.schedulesGenres[dayIndex][genreIndex];
     }
-    
+
     validateSceduleTimes(day: string, times: any[]) {
         if (!this.isRealDayName(day)) return false;
         let dayIndex = this.weekday.indexOf(day),
@@ -2068,13 +2097,14 @@ export class Ropongi {
         }
         return true;
     }
-    
+
     loadGenresPlayList(day: string) {
         this.playlist = {
             files: [],
             currentIndex: 0,
             path: '',
-            directory: ''
+            directory: '',
+            mtimeMs: 0
         };
         if (!this.isRealDayName(day)) return false;
         let genre = this.getCurrentGenre(day);
@@ -2088,7 +2118,19 @@ export class Ropongi {
         if (this.fs.existsSync(this.playlist.path + '/_playlist.m3u')) {;
             let data = this.fs.readFileSync(this.playlist.path + '/_playlist.m3u', {
                 encoding: 'utf8'
+            });  
+
+            this.fs.stat(this.playlist.path + '/_playlist.m3u', (error:any, stats:any) => {
+                if (error) {
+                     this.logAndPrint('err', ` ${error.message}`, error);
+                }
+                else {
+                    if(stats.mtimeMs > this.playlist.mtimeMs) {
+                        this.playlist.mtimeMs = stats.mtimeMs;
+                    }
+                }
             });
+            
             if (data) {
                 this.logAndPrint('info', 'loading ' + this.playlist.directory + ' playlist.');
                 this.playlist.files = this.getOnlyPlayFiles(data.split('\n'));
@@ -2102,7 +2144,7 @@ export class Ropongi {
             this.playlist.files = [];
         }
     }
-    
+
     shutdownIfSet() {
         if (this.configs.autoShutdown) {
             this.logAndPrint('info', 'shuting down...');
@@ -2117,14 +2159,14 @@ export class Ropongi {
             });
         }
     }
-    
+
     setAutoShutdown(status: boolean) {
         this.configs.autoShutdown = status;
         if (status) this.logAndPrint('pass', 'auto shutdown after task end set ' + 'ON'.green);
         else if (!status) this.logAndPrint('pass', 'auto shutdown after task end set ' + 'OFF'.red);
         this.saveConfigs();
     }
-    
+
     getMillis(stringData: string) {
         let temp;
         if (this.isJsonObject(stringData)) {
@@ -2139,7 +2181,7 @@ export class Ropongi {
         }
         return temp;
     }
-    
+
     skipToNextMillisLink() {
         this.milisLinks.index = (this.milisLinks.index + 1) % this.milisLinks.links.length;
         if (this.milisLinks.index === 0 && this.milisLinks.links.length > 1) {
@@ -2149,7 +2191,7 @@ export class Ropongi {
         }
         return this.milisLinks.fullCircle;
     }
-    
+
     /*
     The music is gonna be played when the function  initialize(); is triggered 
     in earlier versions the initialize trigger was in eventEmitter.on('timeSet', initialize);
@@ -2188,7 +2230,7 @@ export class Ropongi {
         });
         this.enableRTC().then(this.setTime, this.setTime);
     }
-    
+
     initialize() {
         clearTimeout(this.setTimeTimeout);
         this.stopPlay().then(() => {
