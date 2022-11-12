@@ -63,11 +63,6 @@ export class Ropongi {
                 return;
             } 
 
-            // Print omx status
-            let status = this.omx.getStatus();
-            this.logAndPrint('info', 'omx staus: ');
-            console.log(status);
-            
             // Test por string
             let file = pathArray.pop() as string;
             this.logAndPrint('info', 'playing index: ' + (this.playlist.files.indexOf(file) + 1) 
