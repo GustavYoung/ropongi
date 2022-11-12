@@ -67,40 +67,6 @@ export class Ropongi {
             let status = this.omx.getStatus();
             this.logAndPrint('info', 'omx staus: ');
             console.log(status);
-
-            // TODO: Identify duplicate omxplayer
-            //Get all pid's of omxplayer 
-            this.exec('pidof omxplayer ' +  status.pid, (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
-                if (err) {
-                    this.logAndPrint('err', `can't get pidof omxplayer: ${err.message}`, err);
-                    return;
-                }
-                if(stderr){
-                    this.logAndPrint('fail', `stderr on pidof omxplayer: ${stderr}`)
-                }
-                if (stdout && typeof stdout == 'string') {
-
-                   this.logAndPrint('info', 'omx player' + stdout + new Date());
-                   console.log(stdout.split(' '));
-                }
-            });
-
-            //Kill duplicated omxplayer
-            if(false){
-                this.exec('sudo kill -9 ' +  status.pid, (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
-                    if (err) {
-                        this.logAndPrint('err', `can't kill omxplayer: ${err.message}`, err);
-                        return;
-                    }
-                    if(stderr){
-                        this.logAndPrint('fail', `stderr on playNext kill omxplayer: ${stderr}`)
-                    }
-    
-                    this.logAndPrint('info', 'omx player' + status.pid + 'killed ' + new Date());
-                    this.skipPlay(1); 
-                });
-                this.playNext();
-            }
             
             // Test por string
             let file = pathArray.pop() as string;
