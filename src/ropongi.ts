@@ -2278,11 +2278,11 @@ export class Ropongi {
             this.loadSchedulesGenresAndSpliters();
             setTimeout(() => this.runSchedules(), 5 * 1000);
         });
-        this.sendMail();
+        /*this.sendMail();
         setInterval(() => {
             this.sendMailIfIpChange();
         }, 3600 * 1000);
-
+*/
         if (this.wifiCheck.status) this.wifiCheckIntervalObject = setInterval(() => {
             this.checkWifi();
         }, this.wifiCheck.minutes * 60 * 1000);
