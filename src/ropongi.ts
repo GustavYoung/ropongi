@@ -98,7 +98,7 @@ export class Ropongi {
             //Get all pid's of omxplayer 
             this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                 if (err) {
-                    this.logAndPrint('err', `can't get pidof omxplayer: ${err.message}`, err);
+                    this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
                     return;
                 }
                 if(stderr){
@@ -113,9 +113,10 @@ export class Ropongi {
                     //Kill duplicated omxplayer
                     if(pids[1]){
                         let pidToKill = pids[1];
-                        this.logAndPrint('warningInfo', `Multiple omx players detected:`)
+                        this.logAndPrint('warningInfo', `Multiple omx players detected: `)
+                        console.log(pids);
                         // Identify the newest proces
-                        this.exec('sudo ps p' + pids[1] + 'o etimes=', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                        this.exec(`sudo ps p ${pids[1]} o etimes=`, (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                             if (err) {
                                 this.logAndPrint('err', `${err.message}`, err);
                                 return;
@@ -126,7 +127,7 @@ export class Ropongi {
                             let time0 = '0';
                             const time1 = stdout as string;
                             if (stdout){
-                                this.exec('sudo ps p' + pids[0] + 'o etimes=', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                                this.exec(`sudo ps p ${pids[0]} o etimes=`, (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                                     if (err) {
                                         this.logAndPrint('err', `${err.message}`, err);
                                         return;
@@ -1856,7 +1857,7 @@ export class Ropongi {
          //Get all pid's of omxplayer 
          this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
              if (err) {
-                 this.logAndPrint('err', `can't get pidof omxplayer: ${err.message}`, err);
+                 this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
                  return;
              }
              if(stderr){

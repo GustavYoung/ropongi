@@ -97,7 +97,7 @@ class Ropongi {
             //Get all pid's of omxplayer 
             this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
                 if (err) {
-                    this.logAndPrint('err', `can't get pidof omxplayer: ${err.message}`, err);
+                    this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
                     return;
                 }
                 if (stderr) {
@@ -110,9 +110,10 @@ class Ropongi {
                     //Kill duplicated omxplayer
                     if (pids[1]) {
                         let pidToKill = pids[1];
-                        this.logAndPrint('warningInfo', `Multiple omx players detected:`);
+                        this.logAndPrint('warningInfo', `Multiple omx players detected: `);
+                        console.log(pids);
                         // Identify the newest proces
-                        this.exec('sudo ps p' + pids[1] + 'o etimes=', (err, stdout, stderr) => {
+                        this.exec(`sudo ps p ${pids[1]} o etimes=`, (err, stdout, stderr) => {
                             if (err) {
                                 this.logAndPrint('err', `${err.message}`, err);
                                 return;
@@ -123,7 +124,7 @@ class Ropongi {
                             let time0 = '0';
                             const time1 = stdout;
                             if (stdout) {
-                                this.exec('sudo ps p' + pids[0] + 'o etimes=', (err, stdout, stderr) => {
+                                this.exec(`sudo ps p ${pids[0]} o etimes=`, (err, stdout, stderr) => {
                                     if (err) {
                                         this.logAndPrint('err', `${err.message}`, err);
                                         return;
@@ -1873,7 +1874,7 @@ class Ropongi {
         //Get all pid's of omxplayer 
         this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
             if (err) {
-                this.logAndPrint('err', `can't get pidof omxplayer: ${err.message}`, err);
+                this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
                 return;
             }
             if (stderr) {
