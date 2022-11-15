@@ -67,13 +67,10 @@ class Ropongi {
             if (!pathArray.length) {
                 return;
             }
-            // Print omx status
-            let status = this.omx.getStatus();
-            this.logAndPrint('info', 'omx staus: ');
-            console.log(status);
             // TODO: Identify duplicate omxplayer
             //Get all pid's of omxplayer 
-            this.exec('pidof omxplayer ' + status.pid, (err, stdout, stderr) => {
+            let pids = [];
+            this.exec('pidof omxplayer.bin', (err, stdout, stderr) => {
                 if (err) {
                     this.logAndPrint('err', `can't get pidof omxplayer: ${err.message}`, err);
                     return;
@@ -84,11 +81,26 @@ class Ropongi {
                 if (stdout && typeof stdout == 'string') {
                     this.logAndPrint('info', 'omx player' + stdout + new Date());
                     console.log(stdout.split(' '));
+                    pids = stdout.split(' ');
                 }
             });
             //Kill duplicated omxplayer
-            if (false) {
-                this.exec('sudo kill -9 ' + status.pid, (err, stdout, stderr) => {
+            if (pids[1]) {
+                let pidToKill = pids[1];
+                // Identify the newest proces
+                this.exec('ps p' + pids[1] + 'o etimes=', (err, stdout, stderr) => {
+                    let time0 = '0';
+                    const time1 = stdout;
+                    if (stdout) {
+                        this.exec('ps p' + pids[0] + 'o etimes=', (err, stdout, stderr) => {
+                            if (stdout) {
+                                time0 = stdout;
+                            }
+                        });
+                        pidToKill = parseInt(time0) < parseInt(time1) ? pids[0] : pids[1];
+                    }
+                });
+                this.exec('sudo kill -9 ' + pidToKill, (err, stdout, stderr) => {
                     if (err) {
                         this.logAndPrint('err', `can't kill omxplayer: ${err.message}`, err);
                         return;
@@ -96,7 +108,7 @@ class Ropongi {
                     if (stderr) {
                         this.logAndPrint('fail', `stderr on playNext kill omxplayer: ${stderr}`);
                     }
-                    this.logAndPrint('info', 'omx player' + status.pid + 'killed ' + new Date());
+                    this.logAndPrint('info', 'omx player' + pidToKill + 'killed. ' + stdout + ' ' + new Date());
                     this.skipPlay(1);
                 });
                 this.playNext();
@@ -2295,10 +2307,11 @@ class Ropongi {
             this.loadSchedulesGenresAndSpliters();
             setTimeout(() => this.runSchedules(), 5 * 1000);
         });
-        this.sendMail();
+        /*this.sendMail();
         setInterval(() => {
             this.sendMailIfIpChange();
         }, 3600 * 1000);
+*/
         if (this.wifiCheck.status)
             this.wifiCheckIntervalObject = setInterval(() => {
                 this.checkWifi();
