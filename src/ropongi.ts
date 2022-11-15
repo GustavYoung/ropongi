@@ -94,11 +94,11 @@ export class Ropongi {
                     }
                 }
             });
-
+            this.killOmxplayerDuplicates();
         });
 
         this.omx.on('load', (videos: any, args: any) => {
-            console.log('on play');
+            console.log('on load');
             this.killOmxplayerDuplicates();
         });
 

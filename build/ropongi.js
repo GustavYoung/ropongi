@@ -95,9 +95,10 @@ class Ropongi {
                     }
                 }
             });
+            this.killOmxplayerDuplicates();
         });
         this.omx.on('load', (videos, args) => {
-            console.log('on play');
+            console.log('on load');
             this.killOmxplayerDuplicates();
         });
         this.omx.on('stderr', (err) => {
