@@ -58,6 +58,7 @@ export class Ropongi {
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
         this.omx.on('play', (path: string) => {
+            console.log('on play');
             let pathArray = path.split('/');
             if (!pathArray.length){
                 return;
@@ -97,7 +98,7 @@ export class Ropongi {
         });
 
         this.omx.on('load', (videos: any, args: any) => {
-            console.log(videos, args); 
+            console.log('on play');
             this.killOmxplayerDuplicates();
         });
 
@@ -1249,6 +1250,7 @@ export class Ropongi {
     }
 
     playNext() {
+        console.log('playNext');
         let forceStop = false;
         let streamedOnesAtLeast = this.playlist.currentIndex === 0 ? false : true;
         if (this.isGenresMode()) {
@@ -1325,10 +1327,12 @@ export class Ropongi {
             this.saveLastPlay();
             this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
         }
+        console.log('playNext last line');
     }
 
     killOmxplayerDuplicates() {
           //Get all pid's of omxplayer 
+          this.logAndPrint('info', `Geting all current pids of omxplayer:`);
           this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
             if (err) {
                 this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
@@ -1341,7 +1345,6 @@ export class Ropongi {
 
                 this.logAndPrint('info', 'Omx players pids: ' + stdout);
                 let pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ')
-                console.log(pids);
 
                 //Kill duplicated omxplayer
                 if(pids[1]){
@@ -1871,12 +1874,9 @@ export class Ropongi {
                  this.logAndPrint('fail', `stderr on pidof omxplayer: ${stderr}`)
              }
              if (stdout && typeof stdout == 'string') {
-
                 this.logAndPrint('pass', 'Omx players pids: ' + stdout);
-                
              }
          });
-
     }
 
     getListOfGenresDirs() {

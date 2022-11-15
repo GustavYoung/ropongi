@@ -63,6 +63,7 @@ class Ropongi {
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
         this.omx.on('play', (path) => {
+            console.log('on play');
             let pathArray = path.split('/');
             if (!pathArray.length) {
                 return;
@@ -96,7 +97,7 @@ class Ropongi {
             });
         });
         this.omx.on('load', (videos, args) => {
-            console.log(videos, args);
+            console.log('on play');
             this.killOmxplayerDuplicates();
         });
         this.omx.on('stderr', (err) => {
@@ -1261,6 +1262,7 @@ class Ropongi {
         this.playNext();
     }
     playNext() {
+        console.log('playNext');
         let forceStop = false;
         let streamedOnesAtLeast = this.playlist.currentIndex === 0 ? false : true;
         if (this.isGenresMode()) {
@@ -1336,9 +1338,11 @@ class Ropongi {
             this.saveLastPlay();
             this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
         }
+        console.log('playNext last line');
     }
     killOmxplayerDuplicates() {
         //Get all pid's of omxplayer 
+        this.logAndPrint('info', `Geting all current pids of omxplayer:`);
         this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
             if (err) {
                 this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
@@ -1350,7 +1354,6 @@ class Ropongi {
             if (stdout && typeof stdout == 'string') {
                 this.logAndPrint('info', 'Omx players pids: ' + stdout);
                 let pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ');
-                console.log(pids);
                 //Kill duplicated omxplayer
                 if (pids[1]) {
                     let pidToKill = pids[1];
