@@ -108,20 +108,35 @@ export class Ropongi {
                 if (stdout && typeof stdout == 'string') {
 
                    this.logAndPrint('info', 'Omx players pids: ' + stdout);
-                   console.log(stdout.replace(/(\r\n|\n|\r)/gm, "").split(' '));
                    pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ')
+                   console.log(pids);
                 }
             });
 
             //Kill duplicated omxplayer
             if(pids[1]){
                 let pidToKill = pids[1];
+                this.logAndPrint('warningInfo', `Multiple omx players detected:`)
                 // Identify the newest proces
                 this.exec('sudo ps p' + pids[1] + 'o etimes=', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                    if (err) {
+                        this.logAndPrint('err', `${err.message}`, err);
+                        return;
+                    }
+                    if(stderr){
+                        this.logAndPrint('fail', `${stderr}`)
+                    }
                     let time0 = '0';
                     const time1 = stdout as string;
                     if (stdout){
                         this.exec('sudo ps p' + pids[0] + 'o etimes=', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                            if (err) {
+                                this.logAndPrint('err', `${err.message}`, err);
+                                return;
+                            }
+                            if(stderr){
+                                this.logAndPrint('fail', `${stderr}`)
+                            }
                             if (stdout){
                                 time0 = stdout as string;
                             }
@@ -1346,7 +1361,7 @@ export class Ropongi {
                     });
                     this.delGenresPlayList(this.playlist.directory);
                     this.createGenresPlayList(this.playlist.directory, true);
-                    this.exec('sudo killall omxplayer', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                    this.exec('sudo killall omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                         if (err) {
                             this.logAndPrint('err', `can't kill all omxplayers: ${err.message}`, err);
                             return;
@@ -1836,6 +1851,25 @@ export class Ropongi {
                 this.logAndPrint('pass', 'SD size: ' + arr[0] + ' used: ' + arr[1] + ' / ' + arr[3] + ' available: ' + arr[2]);
             }
         });
+
+         //Get all pid's of omxplayer 
+         let pids: string[] = [];
+         this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+             if (err) {
+                 this.logAndPrint('err', `can't get pidof omxplayer: ${err.message}`, err);
+                 return;
+             }
+             if(stderr){
+                 this.logAndPrint('fail', `stderr on pidof omxplayer: ${stderr}`)
+             }
+             if (stdout && typeof stdout == 'string') {
+
+                this.logAndPrint('info', 'Omx players pids: ' + stdout);
+                pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ')
+                console.log(pids);
+             }
+         });
+
     }
 
     getListOfGenresDirs() {
