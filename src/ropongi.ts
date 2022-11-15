@@ -94,8 +94,11 @@ export class Ropongi {
                 }
             });
 
-            // this.killOmxplayerDuplicates();
+        });
 
+        this.omx.on('load', (videos: any, args: any) => {
+            console.log(videos, args); 
+            this.killOmxplayerDuplicates();
         });
 
         this.omx.on('stderr', (err:Error) => {
@@ -1287,11 +1290,9 @@ export class Ropongi {
             streamedOnesAtLeast = true;
             if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
                this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
-               this.killOmxplayerDuplicates();
                 // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]]);
             } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
                 this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
-                this.killOmxplayerDuplicates();
                 // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', sharedday + '/' + this.playlist.files[this.playlist.currentIndex]]);
             }
             this.omx.once('end', () => {
