@@ -96,7 +96,6 @@ export class Ropongi {
 
 
             //Get all pid's of omxplayer 
-            let pids: string[] = [];
             this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                 if (err) {
                     this.logAndPrint('err', `can't get pidof omxplayer: ${err.message}`, err);
@@ -107,29 +106,16 @@ export class Ropongi {
                 }
                 if (stdout && typeof stdout == 'string') {
 
-                   this.logAndPrint('info', 'Omx players pids: ' + stdout);
-                   pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ')
-                   console.log(pids);
-                }
-            });
+                    this.logAndPrint('info', 'Omx players pids: ' + stdout);
+                    let pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ')
+                    console.log(pids);
 
-            //Kill duplicated omxplayer
-            if(pids[1]){
-                let pidToKill = pids[1];
-                this.logAndPrint('warningInfo', `Multiple omx players detected:`)
-                // Identify the newest proces
-                this.exec('sudo ps p' + pids[1] + 'o etimes=', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
-                    if (err) {
-                        this.logAndPrint('err', `${err.message}`, err);
-                        return;
-                    }
-                    if(stderr){
-                        this.logAndPrint('fail', `${stderr}`)
-                    }
-                    let time0 = '0';
-                    const time1 = stdout as string;
-                    if (stdout){
-                        this.exec('sudo ps p' + pids[0] + 'o etimes=', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                    //Kill duplicated omxplayer
+                    if(pids[1]){
+                        let pidToKill = pids[1];
+                        this.logAndPrint('warningInfo', `Multiple omx players detected:`)
+                        // Identify the newest proces
+                        this.exec('sudo ps p' + pids[1] + 'o etimes=', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                             if (err) {
                                 this.logAndPrint('err', `${err.message}`, err);
                                 return;
@@ -137,27 +123,42 @@ export class Ropongi {
                             if(stderr){
                                 this.logAndPrint('fail', `${stderr}`)
                             }
+                            let time0 = '0';
+                            const time1 = stdout as string;
                             if (stdout){
-                                time0 = stdout as string;
+                                this.exec('sudo ps p' + pids[0] + 'o etimes=', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                                    if (err) {
+                                        this.logAndPrint('err', `${err.message}`, err);
+                                        return;
+                                    }
+                                    if(stderr){
+                                        this.logAndPrint('fail', `${stderr}`)
+                                    }
+                                    if (stdout){
+                                        time0 = stdout as string;
+                                    }
+                                });
+                                pidToKill = parseInt(time0) < parseInt(time1) ?  pids[0] :  pids[1];
                             }
                         });
-                        pidToKill = parseInt(time0) < parseInt(time1) ?  pids[0] :  pids[1];
-                    }
-                });
 
-                this.exec('sudo kill -9 ' + pidToKill, (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
-                    if (err) {
-                        this.logAndPrint('err', `can't kill omxplayer: ${err.message}`, err);
-                        return;
-                    }
-                    if(stderr){
-                        this.logAndPrint('fail', `stderr on playNext kill omxplayer: ${stderr}`)
-                    }
+                        this.exec('sudo kill -9 ' + pidToKill, (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                            if (err) {
+                                this.logAndPrint('err', `can't kill omxplayer: ${err.message}`, err);
+                                return;
+                            }
+                            if(stderr){
+                                this.logAndPrint('fail', `stderr on playNext kill omxplayer: ${stderr}`)
+                            }
 
-                    this.logAndPrint('info', `omx player ${pidToKill} killed. ${stdout} ` + new Date());
-                });
+                            this.logAndPrint('info', `omx player ${pidToKill} killed. ${stdout} ` + new Date());
+                        });
 
-            }
+                    }
+                }
+            });
+
+        
         });
         this.omx.on('stderr', (err:Error) => {
             this.logAndPrint('err', 'omxplayer error: ' + err.message, err);
@@ -1853,7 +1854,6 @@ export class Ropongi {
         });
 
          //Get all pid's of omxplayer 
-         let pids: string[] = [];
          this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
              if (err) {
                  this.logAndPrint('err', `can't get pidof omxplayer: ${err.message}`, err);
@@ -1864,9 +1864,8 @@ export class Ropongi {
              }
              if (stdout && typeof stdout == 'string') {
 
-                this.logAndPrint('info', 'Omx players pids: ' + stdout);
-                pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ')
-                console.log(pids);
+                this.logAndPrint('pass', 'Omx players pids: ' + stdout);
+                
              }
          });
 
