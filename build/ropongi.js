@@ -1352,11 +1352,11 @@ class Ropongi {
                 let pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ');
                 //Kill duplicated omxplayer
                 if (pids[1]) {
-                    let pidToKill = pids[1];
                     this.logAndPrint('warningInfo', `Multiple omx players detected: `);
                     console.log(pids);
                     // Identify the newest proces
                     this.exec(`sudo ps p ${pids[1]} o etimes=`, (err, stdout, stderr) => {
+                        let pidToKill = pids[1];
                         if (err) {
                             this.logAndPrint('err', `${err.message}`, err);
                             return;
@@ -1380,17 +1380,17 @@ class Ropongi {
                                 }
                             });
                             pidToKill = parseInt(time0) < parseInt(time1) ? pids[0] : pids[1];
+                            this.exec('sudo kill -9 ' + pidToKill, (err, stdout, stderr) => {
+                                if (err) {
+                                    this.logAndPrint('err', `can't kill omxplayer: ${err.message}`, err);
+                                    return;
+                                }
+                                if (stderr) {
+                                    this.logAndPrint('fail', `stderr on playNext kill omxplayer: ${stderr}`);
+                                }
+                                this.logAndPrint('info', `omx player ${pidToKill} killed. ${stdout} ` + new Date());
+                            });
                         }
-                    });
-                    this.exec('sudo kill -9 ' + pidToKill, (err, stdout, stderr) => {
-                        if (err) {
-                            this.logAndPrint('err', `can't kill omxplayer: ${err.message}`, err);
-                            return;
-                        }
-                        if (stderr) {
-                            this.logAndPrint('fail', `stderr on playNext kill omxplayer: ${stderr}`);
-                        }
-                        this.logAndPrint('info', `omx player ${pidToKill} killed. ${stdout} ` + new Date());
                     });
                 }
             }
