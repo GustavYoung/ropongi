@@ -58,7 +58,6 @@ export class Ropongi {
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
         this.omx.on('play', (path: string) => {
-            console.log('on play');
             let pathArray = path.split('/');
             if (!pathArray.length){
                 return;
@@ -94,12 +93,9 @@ export class Ropongi {
                     }
                 }
             });
-            this.killOmxplayerDuplicates();
-        });
-
-        this.omx.on('load', (videos: any, args: any) => {
-            console.log('on load');
-            this.killOmxplayerDuplicates();
+            setTimeout(() => { 
+                this.killOmxplayerDuplicates();
+            }, 200);
         });
 
         this.omx.on('stderr', (err:Error) => {
@@ -1250,7 +1246,6 @@ export class Ropongi {
     }
 
     playNext() {
-        console.log('playNext');
         let forceStop = false;
         let streamedOnesAtLeast = this.playlist.currentIndex === 0 ? false : true;
         if (this.isGenresMode()) {
@@ -1291,10 +1286,10 @@ export class Ropongi {
         if (!this.omx.isPlaying() && !forceStop) {
             streamedOnesAtLeast = true;
             if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
-               console.log(this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig).then(console.log));
+               this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                 // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]]);
             } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
-                console.log(this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig).then(console.log));
+                this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                 // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', sharedday + '/' + this.playlist.files[this.playlist.currentIndex]]);
             }
             this.omx.once('end', () => {
@@ -1327,7 +1322,6 @@ export class Ropongi {
             this.saveLastPlay();
             this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
         }
-        console.log('playNext last line');
     }
 
     killOmxplayerDuplicates() {
