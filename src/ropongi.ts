@@ -1158,7 +1158,7 @@ export class Ropongi {
         // return true;
         return deferred.promise;
     }
-
+/*
     startPlayOLD(day: any) {
         if (this.omx.isPlaying() || this.streaming) return false;
         day = day ? day : this.updateDay().name;
@@ -1176,7 +1176,7 @@ export class Ropongi {
         this.playPlayList();
         return true;
     }
-
+*/
     stopPlay() {
         let deferred = this.q.defer();
         this.streaming = false;
@@ -2203,7 +2203,7 @@ export class Ropongi {
         this.chmodRAll();
         this.loadConfigs();
         this.loadPassport();
-        this.loadEmail();
+        /*this.loadEmail();*/
         this.loadWifiCheck();
         this.loadGenres();
         this.initialize();
