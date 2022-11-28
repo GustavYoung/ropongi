@@ -32,10 +32,10 @@ class Ropongi {
         this.lastPlay = { files: [], currentIndex: 0, directory: '' };
         this.milisLinks = { index: 0, fullCircle: false, links: ['http://worldclockapi.com/api/json/est/now', 'http://currentmillis.com/time/minutes-since-unix-epoch.php'] };
         this.networkInfo = { localIp: null, networkIp: null };
-        this.new_rdm_at_end = 1;
+        this.new_rdm_at_end = 0;
         this.nodemailer = require('nodemailer');
         this.omx = require('omx-manager');
-        this.omxconfig = { '-o': 'local', '--vol': '0', '-b': false, '-g': true, '--advanced': false, '--no-osd': true, '--no-keys': false, '-M': false, '-w': false };
+        this.omxconfig = { '-o': 'local', '--vol': '0', '-b': false, '-g': true, '--advanced': false, '--no-osd': true, '--no-keys': true, '-M': false, '-w': false };
         this.os = require('os');
         this.outputTypes = ['both', 'hdmi', 'local'];
         this.passport = { name: 'n/a', place: 'n/a', address: 'n/a' };
@@ -2261,10 +2261,11 @@ class Ropongi {
             this.loadSchedulesGenresAndSpliters();
             setTimeout(() => this.runSchedules(), 5 * 1000);
         });
-        this.sendMail();
+        /*this.sendMail();
         setInterval(() => {
             this.sendMailIfIpChange();
         }, 3600 * 1000);
+*/
         if (this.wifiCheck.status)
             this.wifiCheckIntervalObject = setInterval(() => {
                 this.checkWifi();

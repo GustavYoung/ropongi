@@ -22,10 +22,10 @@ export class Ropongi {
     lastPlay = { files: [] as string[], currentIndex: 0, directory: ''};
     milisLinks = { index: 0, fullCircle: false, links: ['http://worldclockapi.com/api/json/est/now', 'http://currentmillis.com/time/minutes-since-unix-epoch.php'] };
     networkInfo = { localIp: null, networkIp: null };
-    new_rdm_at_end = 1;
+    new_rdm_at_end = 0;
     nodemailer = require('nodemailer');
     omx = require('omx-manager');
-    omxconfig = { '-o': 'local', '--vol': '0', '-b': false, '-g': true, '--advanced': false, '--no-osd': true, '--no-keys': false, '-M': false, '-w': false };
+    omxconfig = { '-o': 'local', '--vol': '0', '-b': false, '-g': true, '--advanced': false, '--no-osd': true, '--no-keys': true, '-M': false, '-w': false };
     os = require('os');
     outputTypes = ['both', 'hdmi', 'local'];
     passport = { name: 'n/a', place: 'n/a', address: 'n/a' };
@@ -2239,11 +2239,11 @@ export class Ropongi {
             this.loadSchedulesGenresAndSpliters();
             setTimeout(() => this.runSchedules(), 5 * 1000);
         });
-        this.sendMail();
+        /*this.sendMail();
         setInterval(() => {
             this.sendMailIfIpChange();
         }, 3600 * 1000);
-
+*/
         if (this.wifiCheck.status) this.wifiCheckIntervalObject = setInterval(() => {
             this.checkWifi();
         }, this.wifiCheck.minutes * 60 * 1000);
