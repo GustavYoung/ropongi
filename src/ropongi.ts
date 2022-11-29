@@ -1293,6 +1293,33 @@ export class Ropongi {
 
         if (!this.omx.isPlaying() && !forceStop) {
             streamedOnesAtLeast = true;
+
+            //Get all pid's of omxplayer 
+            this.logAndPrint('info', `Geting omxplayer before calling this.omx.play:`);
+            this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                if (err) {
+                    this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
+                    return;
+                }
+                if(stderr){
+                    this.logAndPrint('fail', `stderr on pidof omxplayer: ${stderr}`)
+                }
+                if (stdout && typeof stdout == 'string') {
+
+                    this.logAndPrint('info', 'Omx players pids: ' + stdout);
+                    let pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ')
+
+                    //Look for duplicated omxplayer
+                    // if(pids[1]){
+                    //     this.logAndPrint('warningInfo', `Multiple omx players detected: `)
+                    //     console.log(pids);
+                    // }
+                }
+            });
+            console.log("omx.isLoaded(): ", this.omx.isLoaded());
+            console.log("omx.getStatus(): ", this.omx.getStatus());
+            console.log("omx.isPlaying(): ", this.omx.isPlaying());
+
             if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
                this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                 // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]]);
