@@ -1295,10 +1295,15 @@ export class Ropongi {
             streamedOnesAtLeast = true;
 
             //Get all pid's of omxplayer 
-            this.logAndPrint('info', `Geting omxplayer before calling this.omx.play:`);
+            this.logAndPrint('info', `Previous omxplayer chek before calling this.omx.play:`);
             this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                 if (err) {
-                    this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
+                    this.logAndPrint('info', `No previous omxplayer found, start playing. ${err.message}`, err);
+                    if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
+                        this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
+                     } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
+                         this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
+                     }
                     return;
                 }
                 if(stderr){
@@ -1306,27 +1311,12 @@ export class Ropongi {
                 }
                 if (stdout && typeof stdout == 'string') {
 
-                    this.logAndPrint('info', 'Omx players pids: ' + stdout);
-                    let pids = stdout.replace(/(\r\n|\n|\r)/gm, "").split(' ')
-
-                    //Look for duplicated omxplayer
-                    // if(pids[1]){
-                    //     this.logAndPrint('warningInfo', `Multiple omx players detected: `)
-                    //     console.log(pids);
-                    // }
+                    this.logAndPrint('warningInfo', 'Previus omxplayer open, omx.play aborted.');
+                    this.logAndPrint('warningInfo', 'Omx players pids: ' + stdout);
                 }
             });
-            console.log("omx.isLoaded(): ", this.omx.isLoaded());
-            console.log("omx.getStatus(): ", this.omx.getStatus());
-            console.log("omx.isPlaying(): ", this.omx.isPlaying());
 
-            if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
-               this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
-                // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]]);
-            } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
-                this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
-                // omxplayer = spawn('/usr/bin/omxplayer', ['-o', configs.output, '-b', '--no-keys', '-g', sharedday + '/' + this.playlist.files[this.playlist.currentIndex]]);
-            }
+ 
             this.omx.once('end', () => {
                 if (this.new_rdm_at_end === 1 && this.streaming && this.playlist.currentIndex === 0 ){
                     this.logAndPrint('info', 'recargando playlist ' + (this.playlist.currentIndex) + (this.playlist.files.length));
