@@ -1145,13 +1145,13 @@ class Ropongi {
                         minute: stm,
                         dayOfWeek: i
                     };
-                    this.schedulesStart[i] = this.schedule.scheduleJob(this.schedulesStartObject[i], () => this.startSchedule());
+                    this.schedulesStart[i] = this.schedule.scheduleJob(`Start on ${this.weekday[i]} ${sth}:${stm}`, this.schedulesStartObject[i], () => this.startSchedule());
                     this.schedulesStopObject[i] = {
                         hour: eth,
                         minute: etm,
                         dayOfWeek: this.weekday.indexOf(this.schedules[i].endDay)
                     };
-                    this.schedulesStop[i] = this.schedule.scheduleJob(this.schedulesStopObject[i], () => this.stopSchedule());
+                    this.schedulesStop[i] = this.schedule.scheduleJob(`Stop on ${this.weekday[i]} ${eth}:${etm}`, this.schedulesStopObject[i], () => this.stopSchedule());
                 }
             }
         }
@@ -1160,12 +1160,15 @@ class Ropongi {
         }, (err) => {
             this.logAndPrint('err', err.message, err);
         });
+        this.logAndPrint('info', 'Current schedule: ');
+        Object.keys(this.schedule.scheduledJobs).forEach((key, index) => {
+            this.logAndPrint('info', this.schedule.scheduledJobs[key].name);
+        });
     }
     startPlay(day = null) {
         let deferred = this.q.defer();
         if (this.omx.isPlaying() || this.streaming) {
             deferred.reject(new Error('allready streaming'));
-            // return false;
         }
         else {
             day = day ? day : this.updateDay().name;
@@ -1183,7 +1186,6 @@ class Ropongi {
             this.playPlayList();
             deferred.resolve();
         }
-        // return true;
         return deferred.promise;
     }
     startPlayOLD(day) {

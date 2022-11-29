@@ -13,7 +13,7 @@
     "colors": "1.4.0",
     "ip": "0.3.3",
     "lodash": "3.10.1",
-    "node-schedule": "0.6.0",
+    "node-schedule": "^2.1.0",
     "nodemailer": "1.9.0",
     "omx-manager": "git+https://github.com/espisolon-sys/omx-manager.git",
     "q": "^1.4.1",
