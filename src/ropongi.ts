@@ -883,6 +883,7 @@ export class Ropongi {
     }
 
     loadLastPlay() {
+        console.log('loadLastPlay()');
         if (this.isDaysMode()) {
             let tempLastPlay = this.lastPlay;
             if (this.fs.existsSync(this.basePath + '/saves/lastplay.json')) {
@@ -1302,7 +1303,11 @@ export class Ropongi {
         }
         console.log('while condition: ', !forceStop 
         && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]) 
-        && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]));
+        && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]), 
+        !forceStop , " && ",
+        !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]), " && ",
+        !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])
+        );
         while (
             !forceStop 
             && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]) 
@@ -1391,7 +1396,9 @@ export class Ropongi {
                 }
             });
             this.saveLastPlay();
+            console.log(1399,this.playlist.currentIndex);
             this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
+            console.log(1401, this.playlist.currentIndex);
         }
     }
 
