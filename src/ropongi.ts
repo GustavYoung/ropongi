@@ -1089,13 +1089,10 @@ export class Ropongi {
                 setTimeout(() => { 
                     this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                         if (err) {
+                            this.logAndPrint('warningInfo', 'startPlay. allready streaming condition error. ');
                             this.startPlay(playingDay).then(()=> {
-                                deferred.resolve();
+                                return deferred.resolve();
                             });
-                            return;
-                        }
-                        if(stderr){
-                            this.logAndPrint('fail', `stderr on pidof omxplayer: ${stderr}`)
                         }
                         if (stdout && typeof stdout == 'string') {
                             deferred.reject(new Error('allready streaming. Omx player pid: ' + stdout));
@@ -1108,16 +1105,13 @@ export class Ropongi {
              setTimeout(() => { 
                 this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                     if (err) {
+                        this.logAndPrint('warningInfo', 'startPlay. allready streaming condition error. ');
                         this.startPlay(playingDay).then(()=> {
-                            deferred.resolve();
+                           return deferred.resolve();
                         });
-                        return;
-                    }
-                    if(stderr){
-                        this.logAndPrint('fail', `stderr on pidof omxplayer: ${stderr}`)
                     }
                     if (stdout && typeof stdout == 'string') {
-                        deferred.reject(new Error('allready streaming. Omx player pid: ' + stdout));
+                        return deferred.reject(new Error('allready streaming. Omx player pid: ' + stdout));
                     }
                 });
             }, 200);
