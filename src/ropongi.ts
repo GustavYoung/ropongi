@@ -1298,13 +1298,12 @@ export class Ropongi {
                 this.loadGenresPlayList(startDay);
             }
         }
-        console.log('1301:', this.playlist.currentIndex + 1,this.playlist.files[this.playlist.currentIndex + 1], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex + 1]));
         while (
             !forceStop 
             && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex + 1]) 
             && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex + 1])) {
-                this.logAndPrint('warningInfo', 'missing file, playing index: ' 
-                + (this.playlist.currentIndex + 1) + '/' 
+                this.logAndPrint('warningInfo', 'Missing file, skiping index: ' 
+                + (this.playlist.currentIndex) + '/' 
                     + this.playlist.files.length + ' : ' 
                     + this.playlist.files[this.playlist.currentIndex] + ' in ' 
                     + this.playlist.directory + ' folder.');
@@ -1319,20 +1318,16 @@ export class Ropongi {
                         break;
                     }
                 }
-                console.log('1322:', this.playlist.currentIndex + 1,this.playlist.files[this.playlist.currentIndex + 1], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex + 1]));
                 this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
-                console.log('1324:', this.playlist.currentIndex + 1,this.playlist.files[this.playlist.currentIndex + 1], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex + 1]));
         }
 
         if (!this.omx.isPlaying() && !forceStop) {
             streamedOnesAtLeast = true;
-            console.log('1329:', this.playlist.currentIndex,this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
 
             //Get all pid's of omxplayer 
             this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                 if (err) {
                     this.logAndPrint('info', `No previous omxplayer found, start playing ${ this.playlist.files[this.playlist.currentIndex]}.`, err);
-                    console.log('1332:', this.playlist.currentIndex,this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
                     if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
                         this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                      } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
