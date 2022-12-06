@@ -1308,8 +1308,8 @@ class Ropongi {
         }
         console.log('1301:', this.playlist.currentIndex, this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
         while (!forceStop
-            && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])
-            && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
+            && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex + 1])
+            && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex + 1])) {
             this.logAndPrint('warningInfo', 'missing file, playing index: '
                 + (this.playlist.currentIndex + 1) + '/'
                 + this.playlist.files.length + ' : '
