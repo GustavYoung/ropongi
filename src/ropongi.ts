@@ -1245,7 +1245,7 @@ export class Ropongi {
             this.logAndPrint('fail', 'skip between 0 to ' + (this.playlist.files.length - 1));
             return;
         } else if (num && this.playlist.files.length) {
-            this.playlist.currentIndex = (this.playlist.currentIndex + num + this.playlist.files.length) % this.playlist.files.length;
+            this.playlist.currentIndex = (this.playlist.currentIndex + num - 1 + this.playlist.files.length) % this.playlist.files.length;
             this.saveLastPlay();
         }
 
