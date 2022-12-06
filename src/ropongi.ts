@@ -1285,6 +1285,7 @@ export class Ropongi {
     }
 
     playNext() {
+        console.log(this.playlist.currentIndex);
         let forceStop = false;
         let streamedOnesAtLeast = this.playlist.currentIndex === 0 ? false : true;
         if (this.isGenresMode()) {
@@ -1330,9 +1331,13 @@ export class Ropongi {
                 if (err) {
                     this.logAndPrint('info', `No previous omxplayer found, start playing ${ this.playlist.files[this.playlist.currentIndex]}.`, err);
                     if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
+                        console.log(this.playlist.currentIndex);
+                        console.log(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]);
                         this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                      } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
-                         this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
+                        console.log(this.playlist.currentIndex); 
+                        console.log(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]); 
+                        this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                      } else {
                         this.logAndPrint('warningInfo', 'missing file, playing index: ' 
                         + (this.playlist.currentIndex + 1) + '/' 
