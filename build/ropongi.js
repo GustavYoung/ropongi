@@ -1360,6 +1360,8 @@ class Ropongi {
                             + (this.playlist.currentIndex + 1) + '/'
                             + this.playlist.files.length + ' : '
                             + this.playlist.files[this.playlist.currentIndex]);
+                        this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
+                        this.saveLastPlay();
                     }
                     return;
                 }

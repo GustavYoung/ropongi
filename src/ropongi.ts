@@ -1356,6 +1356,8 @@ export class Ropongi {
                         + (this.playlist.currentIndex + 1) + '/' 
                         + this.playlist.files.length + ' : ' 
                         + this.playlist.files[this.playlist.currentIndex]);
+                        this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
+                        this.saveLastPlay();
                      }
 
                     return;
@@ -1398,6 +1400,7 @@ export class Ropongi {
                     this.playNext();
                 }
             });
+
             this.saveLastPlay();
             console.log(1399,this.playlist.currentIndex);
             this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
