@@ -1173,10 +1173,12 @@ export class Ropongi {
             this.logAndPrint('err', err.message, err);
         });
 
-        this.logAndPrint('info', 'Current schedule: ');
-        Object.keys(this.schedule.scheduledJobs).forEach((key, index) => {
-            this.logAndPrint('info', this.schedule.scheduledJobs[key].name);
-        });
+        if(this.configs.debug){
+            this.logAndPrint('info', 'Current schedule: ');
+            Object.keys(this.schedule.scheduledJobs).forEach((key, index) => {
+                this.logAndPrint('info', this.schedule.scheduledJobs[key].name);
+            });
+        }
     }
 
     startPlay(day: string | null = null) {
@@ -1238,19 +1240,26 @@ export class Ropongi {
 
     skipPlay(val: string | number) {
         const num = parseInt(val?.toString()) || 0;
-        
+        console.log(num);
+        console.log(num && this.playlist.files.length && (num < 0 || num >= this.playlist.files.length), num, this.playlist.files.length, num < 0, num >= this.playlist.files.length)
         if (num && this.playlist.files.length && (num < 0 || num >= this.playlist.files.length)) {
+            console.log(1246);
             this.logAndPrint('fail', 'skip between 0 to ' + (this.playlist.files.length - 1));
             return;
         } else if (num && this.playlist.files.length) {
+            console.log(1250);
             this.playlist.currentIndex = (num - 1 + this.playlist.files.length) % this.playlist.files.length;
+            console.log(this.playlist.currentIndex);
             this.saveLastPlay();
         }
         if (this.omx.isPlaying()) {
+            console.log(1256);
             this.omx.stop();
         } else {
+            console.log(1259);
             this.playIfPlayTime().then(() => {
                 this.logAndPrint('pass', 'starting stream.');
+                console.log(this.playlist.currentIndex);
             }, (err: Error) => {
                 this.logAndPrint('err', err.message, err);
             });
