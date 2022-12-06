@@ -22,7 +22,7 @@ export class Ropongi {
     lastPlay = { files: [] as string[], currentIndex: 0, directory: ''};
     milisLinks = { index: 0, fullCircle: false, links: ['http://worldclockapi.com/api/json/est/now', 'http://currentmillis.com/time/minutes-since-unix-epoch.php'] };
     networkInfo = { localIp: null, networkIp: null };
-    new_rdm_at_end = 1;
+    new_rdm_at_end = 0;
     nodemailer = require('nodemailer');
     omx = require('omx-manager');
     omxconfig = { '-o': 'local', '--vol': '0', '-b': false, '-g': true, '--advanced': false, '--no-osd': true, '--no-keys': false, '-M': false, '-w': false };
@@ -1254,6 +1254,7 @@ export class Ropongi {
                 this.logAndPrint('err', err.message, err);
             });
         }
+        this.saveLastPlay();
     }
 
     getTime() {
@@ -1297,6 +1298,7 @@ export class Ropongi {
                 this.loadGenresPlayList(startDay);
             }
         }
+        console.log(this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
         while (
             !forceStop 
             && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]) 
@@ -1327,6 +1329,7 @@ export class Ropongi {
             this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                 if (err) {
                     this.logAndPrint('info', `No previous omxplayer found, start playing ${ this.playlist.files[this.playlist.currentIndex]}.`, err);
+                    console.log(this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
                     if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
                         this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                      } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {

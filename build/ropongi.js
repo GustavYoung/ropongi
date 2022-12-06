@@ -32,7 +32,7 @@ class Ropongi {
         this.lastPlay = { files: [], currentIndex: 0, directory: '' };
         this.milisLinks = { index: 0, fullCircle: false, links: ['http://worldclockapi.com/api/json/est/now', 'http://currentmillis.com/time/minutes-since-unix-epoch.php'] };
         this.networkInfo = { localIp: null, networkIp: null };
-        this.new_rdm_at_end = 1;
+        this.new_rdm_at_end = 0;
         this.nodemailer = require('nodemailer');
         this.omx = require('omx-manager');
         this.omxconfig = { '-o': 'local', '--vol': '0', '-b': false, '-g': true, '--advanced': false, '--no-osd': true, '--no-keys': false, '-M': false, '-w': false };
@@ -1269,6 +1269,7 @@ class Ropongi {
                 this.logAndPrint('err', err.message, err);
             });
         }
+        this.saveLastPlay();
     }
     getTime() {
         let hour = new Date().getHours().toString(), minute = new Date().getMinutes().toString(), second = new Date().getSeconds().toString();
@@ -1305,6 +1306,7 @@ class Ropongi {
                 this.loadGenresPlayList(startDay);
             }
         }
+        console.log(this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
         while (!forceStop
             && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])
             && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
@@ -1333,6 +1335,7 @@ class Ropongi {
             this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
                 if (err) {
                     this.logAndPrint('info', `No previous omxplayer found, start playing ${this.playlist.files[this.playlist.currentIndex]}.`, err);
+                    console.log(this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
                     if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
                         this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                     }
