@@ -910,7 +910,6 @@ class Ropongi {
         }
     }
     loadLastPlay() {
-        console.log('loadLastPlay()');
         if (this.isDaysMode()) {
             let tempLastPlay = this.lastPlay;
             if (this.fs.existsSync(this.basePath + '/saves/lastplay.json')) {
@@ -1258,9 +1257,7 @@ class Ropongi {
             return;
         }
         else if (num && this.playlist.files.length) {
-            console.log(this.playlist.currentIndex);
-            this.playlist.currentIndex = (num - 1 + this.playlist.files.length) % this.playlist.files.length;
-            console.log(this.playlist.currentIndex);
+            () => this.playlist.currentIndex = (num - 1 + this.playlist.files.length) % this.playlist.files.length;
         }
         if (this.omx.isPlaying()) {
             this.omx.stop();
@@ -1293,7 +1290,6 @@ class Ropongi {
         this.playNext();
     }
     playNext() {
-        console.log(1288, this.playlist.currentIndex);
         let forceStop = false;
         let streamedOnesAtLeast = this.playlist.currentIndex === 0 ? false : true;
         if (this.isGenresMode()) {
@@ -1309,10 +1305,6 @@ class Ropongi {
                 this.loadGenresPlayList(startDay);
             }
         }
-        console.log('while condition: ', !forceStop
-            && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])
-            && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]), !forceStop, " && ", !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]), " && ", !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]));
-        console.log(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]);
         while (!forceStop
             && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])
             && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
@@ -1334,7 +1326,6 @@ class Ropongi {
                 }
             }
             this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
-            console.log(1327, this.playlist.currentIndex);
         }
         if (!this.omx.isPlaying() && !forceStop) {
             streamedOnesAtLeast = true;
@@ -1342,20 +1333,13 @@ class Ropongi {
             this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
                 if (err) {
                     this.logAndPrint('info', `No previous omxplayer found, start playing ${this.playlist.files[this.playlist.currentIndex]}.`, err);
-                    console.log('this.fs.existsSync in this.playlist: ', this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
-                    console.log(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]);
                     if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
-                        console.log(1338, this.playlist.currentIndex);
-                        console.log(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]);
                         this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                     }
                     else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
-                        console.log(1342, this.playlist.currentIndex);
-                        console.log(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]);
                         this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                     }
                     else {
-                        console.log(1346, this.playlist.currentIndex);
                         this.logAndPrint('warningInfo', 'missing file, playing index: '
                             + (this.playlist.currentIndex + 1) + '/'
                             + this.playlist.files.length + ' : '
@@ -1399,9 +1383,7 @@ class Ropongi {
                 }
             });
             this.saveLastPlay();
-            console.log(1399, this.playlist.currentIndex);
             this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
-            console.log(1401, this.playlist.currentIndex);
         }
     }
     killOmxplayerDuplicates() {
