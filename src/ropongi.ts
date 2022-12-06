@@ -1089,7 +1089,8 @@ export class Ropongi {
                 setTimeout(() => { 
                     this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                         if (err) {
-                            this.logAndPrint('warningInfo', 'startPlay. allready streaming condition error. ');
+                            this.logAndPrint('warningInfo', 'Allready streaming condition erro on startPlay. No omxplayer detected.', err);
+                            this.streaming = false;
                             this.startPlay(playingDay).then(()=> {
                                 return deferred.resolve();
                             });
@@ -1105,7 +1106,8 @@ export class Ropongi {
              setTimeout(() => { 
                 this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                     if (err) {
-                        this.logAndPrint('warningInfo', 'startPlay. allready streaming condition error. ');
+                        this.logAndPrint('warningInfo', 'Allready streaming condition erro on startPlay. No omxplayer detected.', err);
+                        this.streaming = false;
                         this.startPlay(playingDay).then(()=> {
                            return deferred.resolve();
                         });

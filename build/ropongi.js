@@ -1111,7 +1111,8 @@ class Ropongi {
                 setTimeout(() => {
                     this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
                         if (err) {
-                            this.logAndPrint('warningInfo', 'startPlay. allready streaming condition error. ');
+                            this.logAndPrint('warningInfo', 'Allready streaming condition erro on startPlay. No omxplayer detected.', err);
+                            this.streaming = false;
                             this.startPlay(playingDay).then(() => {
                                 return deferred.resolve();
                             });
@@ -1128,7 +1129,8 @@ class Ropongi {
             setTimeout(() => {
                 this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
                     if (err) {
-                        this.logAndPrint('warningInfo', 'startPlay. allready streaming condition error. ');
+                        this.logAndPrint('warningInfo', 'Allready streaming condition erro on startPlay. No omxplayer detected.', err);
+                        this.streaming = false;
                         this.startPlay(playingDay).then(() => {
                             return deferred.resolve();
                         });
