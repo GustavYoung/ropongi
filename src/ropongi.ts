@@ -1285,7 +1285,7 @@ export class Ropongi {
     }
 
     playNext() {
-        console.log(this.playlist.currentIndex);
+        console.log(1288, this.playlist.currentIndex);
         let forceStop = false;
         let streamedOnesAtLeast = this.playlist.currentIndex === 0 ? false : true;
         if (this.isGenresMode()) {
@@ -1300,6 +1300,9 @@ export class Ropongi {
                 this.loadGenresPlayList(startDay);
             }
         }
+        console.log('while condition: ', !forceStop 
+        && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]) 
+        && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]));
         while (
             !forceStop 
             && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]) 
@@ -1321,6 +1324,7 @@ export class Ropongi {
                     }
                 }
                 this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
+                console.log(1327, this.playlist.currentIndex);
         }
 
         if (!this.omx.isPlaying() && !forceStop) {
@@ -1331,14 +1335,15 @@ export class Ropongi {
                 if (err) {
                     this.logAndPrint('info', `No previous omxplayer found, start playing ${ this.playlist.files[this.playlist.currentIndex]}.`, err);
                     if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
-                        console.log(this.playlist.currentIndex);
+                        console.log(1338, this.playlist.currentIndex);
                         console.log(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]);
                         this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                      } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
-                        console.log(this.playlist.currentIndex); 
+                        console.log(1342, this.playlist.currentIndex); 
                         console.log(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]); 
                         this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                      } else {
+                        console.log(1346, this.playlist.currentIndex);
                         this.logAndPrint('warningInfo', 'missing file, playing index: ' 
                         + (this.playlist.currentIndex + 1) + '/' 
                         + this.playlist.files.length + ' : ' 
