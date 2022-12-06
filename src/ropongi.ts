@@ -1298,7 +1298,7 @@ export class Ropongi {
                 this.loadGenresPlayList(startDay);
             }
         }
-        console.log(this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
+        console.log('1301:', this.playlist.currentIndex,this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
         while (
             !forceStop 
             && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]) 
@@ -1329,7 +1329,7 @@ export class Ropongi {
             this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                 if (err) {
                     this.logAndPrint('info', `No previous omxplayer found, start playing ${ this.playlist.files[this.playlist.currentIndex]}.`, err);
-                    console.log(this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
+                    console.log('1332:', this.playlist.currentIndex,this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
                     if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
                         this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                      } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
