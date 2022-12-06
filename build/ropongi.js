@@ -1257,7 +1257,8 @@ class Ropongi {
             return;
         }
         else if (num && this.playlist.files.length) {
-            () => this.playlist.currentIndex = (num - 1 + this.playlist.files.length) % this.playlist.files.length;
+            this.playlist.currentIndex = (num - 1 + this.playlist.files.length) % this.playlist.files.length;
+            this.saveLastPlay();
         }
         if (this.omx.isPlaying()) {
             this.omx.stop();
@@ -1269,7 +1270,6 @@ class Ropongi {
                 this.logAndPrint('err', err.message, err);
             });
         }
-        this.saveLastPlay();
     }
     getTime() {
         let hour = new Date().getHours().toString(), minute = new Date().getMinutes().toString(), second = new Date().getSeconds().toString();
@@ -1328,9 +1328,11 @@ class Ropongi {
                 }
             }
             this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
+            console.log('1323:', this.playlist.currentIndex, this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
         }
         if (!this.omx.isPlaying() && !forceStop) {
             streamedOnesAtLeast = true;
+            console.log('1328:', this.playlist.currentIndex, this.playlist.files[this.playlist.currentIndex], this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
             //Get all pid's of omxplayer 
             this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
                 if (err) {
@@ -1347,8 +1349,7 @@ class Ropongi {
                             + (this.playlist.currentIndex + 1) + '/'
                             + this.playlist.files.length + ' : '
                             + this.playlist.files[this.playlist.currentIndex]);
-                        this.playlist.currentIndex = (this.playlist.currentIndex + 1 + this.playlist.files.length) % this.playlist.files.length;
-                        this.saveLastPlay();
+                        this.skipPlay(1);
                     }
                     return;
                 }
