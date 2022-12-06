@@ -1258,7 +1258,7 @@ class Ropongi {
         }
         else if (num && this.playlist.files.length) {
             console.log(this.playlist.currentIndex);
-            () => this.playlist.currentIndex = (num - 1 + this.playlist.files.length) % this.playlist.files.length;
+            this.playlist.currentIndex = (num - 1 + this.playlist.files.length) % this.playlist.files.length;
             console.log(this.playlist.currentIndex);
         }
         if (this.omx.isPlaying()) {
