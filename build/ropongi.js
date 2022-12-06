@@ -1127,7 +1127,23 @@ class Ropongi {
             });
         }
         else if (this.omx.isPlaying() || this.streaming) {
-            deferred.reject(new Error('allready streaming'));
+            // Wait and verify if there really is an omxplayer started.
+            setTimeout(() => {
+                this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
+                    if (err) {
+                        this.startPlay(playingDay).then(() => {
+                            deferred.resolve();
+                        });
+                        return;
+                    }
+                    if (stderr) {
+                        this.logAndPrint('fail', `stderr on pidof omxplayer: ${stderr}`);
+                    }
+                    if (stdout && typeof stdout == 'string') {
+                        deferred.reject(new Error('allready streaming. Omx player pid: ' + stdout));
+                    }
+                });
+            }, 200);
         }
         else if (!playingDay) {
             deferred.reject(new Error('no task set'));
