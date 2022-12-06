@@ -1082,10 +1082,26 @@ export class Ropongi {
         let deferred = this.q.defer();
         let playingDay = this.getPlayingStartDay();
         if (!this.omx.isPlaying() && !this.streaming && playingDay) {
-            this.startPlay(playingDay).then(function() {
+            this.startPlay(playingDay).then(() => {
                 deferred.resolve();
-            }, function() {
-                deferred.reject(new Error('allready streaming'));
+            }, () => {
+                // Wait and verify if there really is an omxplayer started.
+                setTimeout(() => { 
+                    this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                        if (err) {
+                            this.startPlay(playingDay).then(()=> {
+                                deferred.resolve();
+                            });
+                            return;
+                        }
+                        if(stderr){
+                            this.logAndPrint('fail', `stderr on pidof omxplayer: ${stderr}`)
+                        }
+                        if (stdout && typeof stdout == 'string') {
+                            deferred.reject(new Error('allready streaming. Omx player pid: ' + stdout));
+                        }
+                    });
+                }, 200);
             });
         } else if (this.omx.isPlaying() || this.streaming) {
             deferred.reject(new Error('allready streaming'));
@@ -1295,15 +1311,20 @@ export class Ropongi {
             streamedOnesAtLeast = true;
 
             //Get all pid's of omxplayer 
-            this.logAndPrint('info', `Previous omxplayer chek before calling this.omx.play:`);
             this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                 if (err) {
-                    this.logAndPrint('info', `No previous omxplayer found, start playing. ${err.message}`, err);
+                    this.logAndPrint('info', `No previous omxplayer found, start playing ${ this.playlist.files[this.playlist.currentIndex]}.`, err);
                     if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
                         this.omx.play(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
                      } else if (this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
                          this.omx.play(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex], this.omxconfig);
+                     } else {
+                        this.logAndPrint('warningInfo', 'missing file, playing index: ' 
+                        + (this.playlist.currentIndex + 1) + '/' 
+                        + this.playlist.files.length + ' : ' 
+                        + this.playlist.files[this.playlist.currentIndex]);
                      }
+
                     return;
                 }
                 if(stderr){
@@ -1319,7 +1340,7 @@ export class Ropongi {
  
             this.omx.once('end', () => {
                 if (this.new_rdm_at_end === 1 && this.streaming && this.playlist.currentIndex === 0 ){
-                    this.logAndPrint('info', 'recargando playlist ' + (this.playlist.currentIndex) + (this.playlist.files.length));
+                    this.logAndPrint('info', 'Reloading playlist ' + (this.playlist.currentIndex) + (this.playlist.files.length));
                     this.stopPlay().then((data: { message: any; }) => {
                         this.logAndPrint('pass', data.message);
                     });
@@ -1333,10 +1354,10 @@ export class Ropongi {
                         if(stderr){
                             this.logAndPrint('fail', `stderr on playNext killall omxplayer: ${stderr}`)
                         }
-                    
+
                         this.logAndPrint('info', 'all omx players killed ' + new Date());
                         this.skipPlay(1); 
-                    
+
                     });
                     this.playNext();
                 }
@@ -1351,10 +1372,9 @@ export class Ropongi {
 
     killOmxplayerDuplicates() {
           //Get all pid's of omxplayer 
-          this.logAndPrint('info', `Geting all current pids of omxplayer:`);
           this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
             if (err) {
-                this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
+                this.logAndPrint('warningInfo', `No previous omxplayer found`, err);
                 return;
             }
             if(stderr){
@@ -1884,7 +1904,7 @@ export class Ropongi {
          //Get all pid's of omxplayer 
          this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
              if (err) {
-                 this.logAndPrint('warningInfo', `Can't get pidof omxplayer: ${err.message}`, err);
+                this.logAndPrint('warningInfo', `No previous omxplayer found`, err);
                  return;
              }
              if(stderr){
