@@ -1312,6 +1312,7 @@ class Ropongi {
         console.log('while condition: ', !forceStop
             && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])
             && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]), !forceStop, " && ", !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]), " && ", !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex]));
+        console.log(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]);
         while (!forceStop
             && !this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])
             && !this.fs.existsSync(this.sharedday + '/' + this.playlist.files[this.playlist.currentIndex])) {
@@ -1341,6 +1342,8 @@ class Ropongi {
             this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
                 if (err) {
                     this.logAndPrint('info', `No previous omxplayer found, start playing ${this.playlist.files[this.playlist.currentIndex]}.`, err);
+                    console.log('this.fs.existsSync in this.playlist: ', this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]));
+                    console.log(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]);
                     if (this.fs.existsSync(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex])) {
                         console.log(1338, this.playlist.currentIndex);
                         console.log(this.playlist.path + '/' + this.playlist.files[this.playlist.currentIndex]);
