@@ -57,6 +57,7 @@ export class Ropongi {
     constructor( ) {
         this.omx.setOmxCommand('/usr/bin/omxplayer');
         this.omx.enableHangingHandler();
+        this.ropongiHangingHandler();
         this.omx.on('play', (path: string) => {
             let pathArray = path.split('/');
             if (!pathArray.length){
@@ -2397,5 +2398,35 @@ export class Ropongi {
         if (this.wifiCheck.status) this.wifiCheckIntervalObject = setInterval(() => {
             this.checkWifi();
         }, this.wifiCheck.minutes * 60 * 1000);
+    }
+
+    ropongiHangingHandler() {
+        setInterval(this.resumeHangingPlayer, 1000 * 2 * 60);
+    }
+
+    resumeHangingPlayer() {
+         //Get all pid's of omxplayer 
+         this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+            if (err) {
+               // Wait and verify if there really is no omxplayer started.
+               setTimeout(() => { 
+                    this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
+                        if (err) {
+                            this.logAndPrint('info', 'No player detected in the last seconds. Executing playIfPlayTime().')
+                            this.playIfPlayTime()
+                        }
+                    });
+                }, 1000);
+                return;
+            }
+            if(stderr){
+                this.logAndPrint('fail', `${stderr}`)
+            }
+            if (stdout ) {
+                // Player runing. 
+                return
+            }
+        });
+         
     }
 }
