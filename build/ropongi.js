@@ -2413,7 +2413,7 @@ class Ropongi {
                     setTimeout(() => {
                         this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
                             if (err) {
-                                this.logAndPrint('info', 'No player detected in the last seconds. Executing playIfPlayTime().');
+                                this.logAndPrint('warningInfo', 'No player detected in the last seconds. Executing playIfPlayTime().');
                                 this.playIfPlayTime();
                             }
                         });
