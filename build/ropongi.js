@@ -2399,35 +2399,36 @@ class Ropongi {
         if (this.wifiCheck.status)
             this.wifiCheckIntervalObject = setInterval(() => {
                 this.checkWifi();
-            }, this.wifiCheck.minutes * 60 * 1000);
+            }, this.wifiCheck.minutes * 10 * 1000);
     }
     ropongiHangingHandler() {
         setInterval(() => { this.resumeHangingPlayer(); }, 1000 * 1 * 60);
     }
     resumeHangingPlayer() {
-        //Get all pid's of omxplayer 
-        this.logAndPrint('info', 'ResumeHangingPlayer review...');
-        this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
-            if (err) {
-                // Wait and verify if there really is no omxplayer started.
-                setTimeout(() => {
-                    this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
-                        if (err) {
-                            this.logAndPrint('info', 'No player detected in the last seconds. Executing playIfPlayTime().');
-                            this.playIfPlayTime();
-                        }
-                    });
-                }, 1000);
-                return;
-            }
-            if (stderr) {
-                this.logAndPrint('fail', `${stderr}`);
-            }
-            if (stdout) {
-                // Player runing. 
-                return;
-            }
-        });
+        if (this.streaming) {
+            this.logAndPrint('info', 'ResumeHangingPlayer review...');
+            this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
+                if (err) {
+                    // Wait and verify if there really is no omxplayer started.
+                    setTimeout(() => {
+                        this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
+                            if (err) {
+                                this.logAndPrint('info', 'No player detected in the last seconds. Executing playIfPlayTime().');
+                                this.playIfPlayTime();
+                            }
+                        });
+                    }, 1000);
+                    return;
+                }
+                if (stderr) {
+                    this.logAndPrint('fail', `${stderr}`);
+                }
+                if (stdout) {
+                    // Player runing. 
+                    return;
+                }
+            });
+        }
     }
 }
 exports.Ropongi = Ropongi;
