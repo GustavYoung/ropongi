@@ -2402,12 +2402,12 @@ class Ropongi {
             }, this.wifiCheck.minutes * 60 * 1000);
     }
     ropongiHangingHandler() {
-        setInterval(() => this.resumeHangingPlayer, 1000 * 1 * 60);
+        setInterval(() => { this.resumeHangingPlayer(); }, 1000 * 1 * 60);
     }
     resumeHangingPlayer() {
         //Get all pid's of omxplayer 
+        this.logAndPrint('info', 'ResumeHangingPlayer review...');
         this.exec('sudo pidof omxplayer.bin', (err, stdout, stderr) => {
-            this.logAndPrint('info', 'resumeHangingPlayer');
             if (err) {
                 // Wait and verify if there really is no omxplayer started.
                 setTimeout(() => {
