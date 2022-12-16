@@ -2397,16 +2397,16 @@ export class Ropongi {
 */
         if (this.wifiCheck.status) this.wifiCheckIntervalObject = setInterval(() => {
             this.checkWifi();
-        }, this.wifiCheck.minutes * 10 * 1000);
+        }, this.wifiCheck.minutes * 60 * 1000);
     }
 
     ropongiHangingHandler() {
-        setInterval(() => { this.resumeHangingPlayer()}, 1000 * 1 * 60);
+        setInterval(() => { this.resumeHangingPlayer()}, 1000 * 3 * 60);
     }
 
     resumeHangingPlayer() {
         if (this.streaming) {
-            this.logAndPrint('info', 'ResumeHangingPlayer review...');
+            // this.logAndPrint('info', 'ResumeHangingPlayer review.');
             this.exec('sudo pidof omxplayer.bin', (err: Error, stdout: string|Buffer, stderr: string|Buffer) => {
                 if (err) {
                    // Wait and verify if there really is no omxplayer started.
@@ -2417,7 +2417,7 @@ export class Ropongi {
                                 this.playIfPlayTime()
                             }
                         });
-                    }, 1000);
+                    }, 500);
                     return;
                 }
                 if(stderr){
